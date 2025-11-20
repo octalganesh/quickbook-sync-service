@@ -9,9 +9,6 @@ spring:
   mail:
     default-encoding: UTF-8
     host: smtp.sendgrid.net
-    username: apikey
-    password: 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
-
     port: 587
     properties:
       mail:
@@ -48,15 +45,7 @@ eureka:
     instance-id: ${EUREKA_INSTANCE_IP}:${spring.application.name}:${server.port}
     ip-address: ${EUREKA_INSTANCE_IP:${spring.cloud.client.ip-address}}
 
-S3Upload:
-  access-key: AKIA6NDTRQRBFMUF77JO
-  secret-key: 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
-
 S3base:
   url: https://s3-sbucket1.s3.ap-south-1.amazonaws.com/
 external.sms.service.url: https://platform.clickatell.com/messages
 
-
-fcm:
-  auth:
-    key: ya29.a0AcM612wBA3OBm12Fi-FyNg2nB4vNJUnqeRJkVq88DH0CZehhxRlMwlUBp-nlmC4qp-dAwux89dyNInLYw2gRFgJidkCgLgkdV3sSQTmd2NtNIHNSUe915jIn8xCqwP2kyHDzClVzMOYDqMijZhkXv98JfwRBB6wjSlQpFKudaCgYKAegSARESFQHGX2Miz-xvcJqQgpyKuJLEV3hJ_A0175
