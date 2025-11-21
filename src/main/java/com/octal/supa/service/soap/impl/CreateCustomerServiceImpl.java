@@ -1,4 +1,4 @@
-package com.octal.supa.service.impl;
+package com.octal.supa.service.soap.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,7 +8,7 @@ import com.google.gson.Gson;
 import com.octal.supa.dto.CreateCustomerResponse;
 import com.octal.supa.entities.CreateCustomerQueue;
 import com.octal.supa.repositories.CreateCustomerQueueRepository;
-import com.octal.supa.service.CreateCustomerService;
+import com.octal.supa.service.soap.CreateCustomerService;
 import com.octal.supa.utils.TextUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class CreateCustomerServiceImpl implements CreateCustomerService {

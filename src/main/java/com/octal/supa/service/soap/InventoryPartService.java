@@ -1,4 +1,4 @@
-package com.octal.supa.service;
+package com.octal.supa.service.soap;
 
 import org.springframework.stereotype.Service;
 

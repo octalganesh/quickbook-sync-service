@@ -1,4 +1,4 @@
-package com.octal.supa.service.impl;
+package com.octal.supa.service.soap.impl;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
@@ -6,22 +6,13 @@ import com.google.gson.GsonBuilder;
 import com.octal.supa.dto.InventoryPartDTO;
 import com.octal.supa.entities.InventoryPart;
 import com.octal.supa.repositories.InventoryPartRepository;
-import com.octal.supa.service.InventoryPartService;
+import com.octal.supa.service.soap.InventoryPartService;
 import com.octal.supa.utils.ObjectOrArrayAdapter;
 import com.octal.supa.utils.XmlUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

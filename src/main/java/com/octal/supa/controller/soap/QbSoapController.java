@@ -1,7 +1,7 @@
-package com.octal.supa.controller;
+package com.octal.supa.controller.soap;
 
 import com.octal.supa.dto.ApiResponse;
-import com.octal.supa.service.CreateCustomerService;
+import com.octal.supa.service.soap.InventoryPartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -9,16 +9,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.UUID;
 
 @RestController
-@RequestMapping("/sync/customer")
-public class QuickBookCreateCustomerController {
+@RequestMapping("/sync")
+public class QbSoapController {
 
     @Autowired
-    private CreateCustomerService createCustomerService;
+    private InventoryPartService inventoryPartService;
 
-    @GetMapping(value = "/create")
+    @GetMapping(value = "/items")
     public ResponseEntity<ApiResponse> items(HttpServletRequest request) {
         try {
             return new ResponseEntity<>(new ApiResponse("permissions assigned successfully!", null, "200", HttpStatus.OK), HttpStatus.OK);
@@ -28,7 +27,7 @@ public class QuickBookCreateCustomerController {
     }
 
     @PostMapping(
-            value = "/create",
+            value = "/items",
             consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_XML_VALUE},
             produces = {MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_XML_VALUE}
     )
@@ -37,14 +36,14 @@ public class QuickBookCreateCustomerController {
             if (xmlPayload.contains("<authenticate")) {
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(createCustomerService.getSyncAuthToken());
+                        .body(authenticateResponse());
             } else if (xmlPayload.contains("<sendRequestXML")) {
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(createCustomerService.syncCustomerFromQueue());
+                        .body(sendRequestXMLResponse());
             } else if (xmlPayload.contains("<receiveResponseXML")) {
                 try {
-                    createCustomerService.createSyncCustomerFromQuickBookWebConnector(xmlPayload);
+                    inventoryPartService.syncItemFromQuickBookWebConnector(xmlPayload);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -52,9 +51,6 @@ public class QuickBookCreateCustomerController {
                         .contentType(MediaType.TEXT_XML)
                         .body(receiveResponseXMLResponse());
             } else if (xmlPayload.contains("<getLastError")) {
-                System.out.println("==== getLastError() ====");
-                System.out.println(xmlPayload);  // THIS contains the actual QB error
-                System.out.println("================================");
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
                         .body(getLastErrorResponse());
@@ -73,6 +69,62 @@ public class QuickBookCreateCustomerController {
                     .contentType(MediaType.TEXT_XML)
                     .body(errorSOAP(e.getMessage()));
         }
+    }
+
+    // 1️⃣ authenticate
+    private String authenticateResponse() {
+        return "<?xml version=\"1.0\"?>" +
+                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+                "  <soap:Body>" +
+                "    <authenticateResponse xmlns=\"http://developer.intuit.com/\">" +
+                "      <authenticateResult>" +
+                "        <string>session_token_123</string>" +
+                "        <string/>" +
+                "      </authenticateResult>" +
+                "    </authenticateResponse>" +
+                "  </soap:Body>" +
+                "</soap:Envelope>";
+    }
+
+
+    private String sendRequestXMLResponse() {
+        String request =  "<?xml version=\"1.0\"?>" +
+                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+                "  <soap:Body>" +
+                "    <sendRequestXMLResponse xmlns=\"http://developer.intuit.com/\">" +
+                "      <sendRequestXMLResult><![CDATA[" +
+                "        <?qbxml version=\"13.0\"?>" +
+                "        <QBXML>" +
+                "          <QBXMLMsgsRq onError=\"stopOnError\">" +
+                "            <ItemServiceQueryRq>" +
+                "              <ActiveStatus>All</ActiveStatus>" +
+                "            </ItemServiceQueryRq>" +
+                "            <ItemNonInventoryQueryRq>" +
+                "              <ActiveStatus>All</ActiveStatus>" +
+                "            </ItemNonInventoryQueryRq>" +
+                "            <ItemInventoryQueryRq>" +
+                "              <ActiveStatus>All</ActiveStatus>" +
+                "            </ItemInventoryQueryRq>" +
+                "            <ItemOtherChargeQueryRq>" +
+                "              <ActiveStatus>All</ActiveStatus>" +
+                "            </ItemOtherChargeQueryRq>" +
+                "            <ItemDiscountQueryRq>" +
+                "              <ActiveStatus>All</ActiveStatus>" +
+                "            </ItemDiscountQueryRq>" +
+                "            <ItemSalesTaxQueryRq>" +
+                "              <ActiveStatus>All</ActiveStatus>" +
+                "            </ItemSalesTaxQueryRq>" +
+                "            <ItemInventoryAssemblyQueryRq>" +
+                "              <ActiveStatus>All</ActiveStatus>" +
+                "            </ItemInventoryAssemblyQueryRq>" +
+                "          </QBXMLMsgsRq>" +
+                "        </QBXML>" +
+                "      ]]></sendRequestXMLResult>" +
+                "    </sendRequestXMLResponse>" +
+                "  </soap:Body>" +
+                "</soap:Envelope>";
+        System.out.println(request);
+        return request;
     }
 
     // 3️⃣ receiveResponseXML
@@ -105,7 +157,7 @@ public class QuickBookCreateCustomerController {
                 "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
                 "  <soap:Body>" +
                 "    <closeConnectionResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <closeConnectionResult>Customer Create successfully.</closeConnectionResult>" +
+                "      <closeConnectionResult>Sync completed successfully.</closeConnectionResult>" +
                 "    </closeConnectionResponse>" +
                 "  </soap:Body>" +
                 "</soap:Envelope>";

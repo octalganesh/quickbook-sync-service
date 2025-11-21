@@ -1,7 +1,7 @@
-package com.octal.supa.controller;
+package com.octal.supa.controller.soap;
 
 import com.octal.supa.dto.ApiResponse;
-import com.octal.supa.service.InventoryPartService;
+import com.octal.supa.service.soap.InventoryPartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -9,15 +9,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.UUID;
 
 @RestController
-@RequestMapping("/sync")
-public class QbSoapController {
+@RequestMapping("/sync/invoice")
+public class QuickBookCreateInvoiceController {
 
     @Autowired
     private InventoryPartService inventoryPartService;
 
-    @GetMapping(value = "/items")
+    @GetMapping(value = "/create")
     public ResponseEntity<ApiResponse> items(HttpServletRequest request) {
         try {
             return new ResponseEntity<>(new ApiResponse("permissions assigned successfully!", null, "200", HttpStatus.OK), HttpStatus.OK);
@@ -27,7 +28,7 @@ public class QbSoapController {
     }
 
     @PostMapping(
-            value = "/items",
+            value = "/create",
             consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_XML_VALUE},
             produces = {MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_XML_VALUE}
     )
@@ -40,17 +41,19 @@ public class QbSoapController {
             } else if (xmlPayload.contains("<sendRequestXML")) {
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
+//                        .body(sendRequestXMLResponse("Tarun Singh", "Doe Enterprises", "9999999999", "tarun@example.com", "123 Street", "Mumbai", "MH", "400001", "India"));
                         .body(sendRequestXMLResponse());
             } else if (xmlPayload.contains("<receiveResponseXML")) {
-                try {
-                    inventoryPartService.syncItemFromQuickBookWebConnector(xmlPayload);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                System.out.println("==== receiveResponseXML() ====");
+                System.out.println(xmlPayload);  // THIS contains the actual QB error
+                System.out.println("================================");
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
                         .body(receiveResponseXMLResponse());
             } else if (xmlPayload.contains("<getLastError")) {
+                System.out.println("==== getLastError() ====");
+                System.out.println(xmlPayload);  // THIS contains the actual QB error
+                System.out.println("================================");
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
                         .body(getLastErrorResponse());
@@ -73,12 +76,13 @@ public class QbSoapController {
 
     // 1️⃣ authenticate
     private String authenticateResponse() {
+        String ticket = "ticket_" + UUID.randomUUID();
         return "<?xml version=\"1.0\"?>" +
                 "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
                 "  <soap:Body>" +
                 "    <authenticateResponse xmlns=\"http://developer.intuit.com/\">" +
                 "      <authenticateResult>" +
-                "        <string>session_token_123</string>" +
+                "        <string>" + ticket + "</string>" +
                 "        <string/>" +
                 "      </authenticateResult>" +
                 "    </authenticateResponse>" +
@@ -86,6 +90,93 @@ public class QbSoapController {
                 "</soap:Envelope>";
     }
 
+
+    // 2️⃣ sendRequestXML
+//    private String sendRequestXMLResponse() {
+//        return "<?xml version=\"1.0\"?>" +
+//                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+//                "  <soap:Body>" +
+//                "    <sendRequestXMLResponse xmlns=\"http://developer.intuit.com/\">" +
+//                "      <sendRequestXMLResult><![CDATA[" +
+//                "        <?qbxml version=\"13.0\"?>" +
+//                "        <QBXML>" +
+//                "          <QBXMLMsgsRq onError=\"stopOnError\">" +
+//                "            <ItemInventoryQueryRq>" +
+//                "              <ActiveStatus>All</ActiveStatus>" +
+//                "            </ItemInventoryQueryRq>" +
+//                "          </QBXMLMsgsRq>" +
+//                "        </QBXML>" +
+//                "      ]]></sendRequestXMLResult>" +
+//                "    </sendRequestXMLResponse>" +
+//                "  </soap:Body>" +
+//                "</soap:Envelope>";
+//    }
+
+    private String sendRequestXMLResponse(
+            String customerName,
+            String companyName,
+            String phone,
+            String email,
+            String street,
+            String city,
+            String state,
+            String postalCode,
+            String country
+    ) {
+
+        String qbxml =
+                "<?xml version=\"1.0\"?>\n" +
+                        "<?qbxml version=\"13.0\"?>\n" +
+                        "<QBXML>\n" +
+                        "  <QBXMLMsgsRq onError=\"stopOnError\">\n" +
+                        "    <CustomerAddRq>\n" +
+                        "      <CustomerAdd>\n" +
+                        "        <Name>" + customerName + "</Name>\n" +
+                        (companyName != null && !companyName.isEmpty()
+                                ? "        <CompanyName>" + companyName + "</CompanyName>\n"
+                                : "") +
+                        (phone != null && !phone.isEmpty()
+                                ? "        <Phone>" + phone + "</Phone>\n"
+                                : "") +
+                        (email != null && !email.isEmpty()
+                                ? "        <Email>" + email + "</Email>\n"
+                                : "") +
+                        "        <BillAddress>\n" +
+                        "          <Addr1>" + street + "</Addr1>\n" +
+                        "          <City>" + city + "</City>\n" +
+                        "          <State>" + state + "</State>\n" +
+                        "          <PostalCode>" + postalCode + "</PostalCode>\n" +
+                        "          <Country>" + country + "</Country>\n" +
+                        "        </BillAddress>\n" +
+                        "      </CustomerAdd>\n" +
+                        "    </CustomerAddRq>\n" +
+                        "  </QBXMLMsgsRq>\n" +
+                        "</QBXML>";
+
+        return "<?xml version=\"1.0\"?>" +
+                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+                "  <soap:Body>" +
+                "    <sendRequestXMLResponse xmlns=\"http://developer.intuit.com/\">" +
+                "      <sendRequestXMLResult><![CDATA[\n" + qbxml + "]]></sendRequestXMLResult>" +
+                "    </sendRequestXMLResponse>" +
+                "  </soap:Body>" +
+                "</soap:Envelope>";
+    }
+
+//    private String sendRequestXMLResponse() {
+//        String request = "<?xml version=\"1.0\"?>" +
+//                "<?qbxml version=\"13.0\"?>" +
+//                "<QBXML>" +
+//                "<QBXMLMsgsRq onError=\"stopOnError\">" +
+//                    "<CustomerAddRq>" +
+//                        "<CustomerAdd>" +
+//                            "<Name>Hardik</Name>" +
+//                        "</CustomerAdd>" +
+//                    "</CustomerAddRq>" +
+//                "</QBXMLMsgsRq>" +
+//                "</QBXML>";
+//        return request;
+//    }
 
     private String sendRequestXMLResponse() {
         String request =  "<?xml version=\"1.0\"?>" +
@@ -96,27 +187,11 @@ public class QbSoapController {
                 "        <?qbxml version=\"13.0\"?>" +
                 "        <QBXML>" +
                 "          <QBXMLMsgsRq onError=\"stopOnError\">" +
-                "            <ItemServiceQueryRq>" +
-                "              <ActiveStatus>All</ActiveStatus>" +
-                "            </ItemServiceQueryRq>" +
-                "            <ItemNonInventoryQueryRq>" +
-                "              <ActiveStatus>All</ActiveStatus>" +
-                "            </ItemNonInventoryQueryRq>" +
-                "            <ItemInventoryQueryRq>" +
-                "              <ActiveStatus>All</ActiveStatus>" +
-                "            </ItemInventoryQueryRq>" +
-                "            <ItemOtherChargeQueryRq>" +
-                "              <ActiveStatus>All</ActiveStatus>" +
-                "            </ItemOtherChargeQueryRq>" +
-                "            <ItemDiscountQueryRq>" +
-                "              <ActiveStatus>All</ActiveStatus>" +
-                "            </ItemDiscountQueryRq>" +
-                "            <ItemSalesTaxQueryRq>" +
-                "              <ActiveStatus>All</ActiveStatus>" +
-                "            </ItemSalesTaxQueryRq>" +
-                "            <ItemInventoryAssemblyQueryRq>" +
-                "              <ActiveStatus>All</ActiveStatus>" +
-                "            </ItemInventoryAssemblyQueryRq>" +
+                "            <CustomerAddRq>" +
+                "               <CustomerAdd>" +
+                "                   <Name>Tarun</Name>" +
+                "               </CustomerAdd>" +
+                "            </CustomerAddRq>" +
                 "          </QBXMLMsgsRq>" +
                 "        </QBXML>" +
                 "      ]]></sendRequestXMLResult>" +
@@ -157,7 +232,7 @@ public class QbSoapController {
                 "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
                 "  <soap:Body>" +
                 "    <closeConnectionResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <closeConnectionResult>Sync completed successfully.</closeConnectionResult>" +
+                "      <closeConnectionResult>Customer Create successfully.</closeConnectionResult>" +
                 "    </closeConnectionResponse>" +
                 "  </soap:Body>" +
                 "</soap:Envelope>";
