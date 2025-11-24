@@ -3,7 +3,7 @@ package com.octal.supa.service.soap.impl;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.octal.supa.dto.InventoryPartDTO;
+import com.octal.supa.dto.soap.InventoryPartDTO;
 import com.octal.supa.entities.InventoryPart;
 import com.octal.supa.repositories.InventoryPartRepository;
 import com.octal.supa.service.soap.InventoryPartService;
@@ -26,37 +26,6 @@ public class InventoryPartServiceImpl implements InventoryPartService {
 
     @Override
     public void syncItemFromQuickBookWebConnector(String xmlPayload) throws Exception {
-//        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-//        factory.setNamespaceAware(true); // handle namespaces
-//        DocumentBuilder builder = factory.newDocumentBuilder();
-//        Document doc = builder.parse(new ByteArrayInputStream(xmlPayload.getBytes(StandardCharsets.UTF_8)));
-//        Element envelope = doc.getDocumentElement();
-//        if (!"Envelope".equals(envelope.getLocalName())) {
-//            System.out.println("⚠️ Invalid SOAP envelope");
-//            throw new Exception("Invalid SOAP");
-//        }
-//        XPath xpath = XPathFactory.newInstance().newXPath();
-//        Node bodyNode = (Node) xpath.evaluate("//*[local-name()='Body']", doc, XPathConstants.NODE);
-//        if (bodyNode == null || bodyNode.getNodeType() != Node.ELEMENT_NODE) {
-//            System.out.println("⚠️ Invalid SOAP body");
-//            throw new Exception("Invalid SOAP");
-//        }
-//        Element body = (Element) bodyNode;
-//        Element actionElement = null;
-//        for (int i = 0; i < body.getChildNodes().getLength(); i++) {
-//            Node child = body.getChildNodes().item(i);
-//            if (child.getNodeType() == Node.ELEMENT_NODE) {
-//                actionElement = (Element) child;
-//                break;
-//            }
-//        }
-//        if (actionElement == null) {
-//            System.out.println("⚠️ No action found in SOAP body");
-//            throw new Exception("Invalid SOAP");
-//        }
-//        String actionName = actionElement.getLocalName();
-//        System.out.println("Action: " + actionName);
-//        String payload = nodeToString(actionElement);
         String payloadJson = XmlUtil.convertXmlToJson(xmlPayload);
         if (xmlPayload.contains("ItemInventoryRet")) {
             Gson gson = new GsonBuilder()

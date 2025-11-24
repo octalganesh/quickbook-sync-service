@@ -1,0 +1,44 @@
+package com.octal.supa.service.rest.impl;
+
+import com.octal.supa.dto.rest.CustomerRestDTO;
+import com.octal.supa.entities.CreateCustomerQueue;
+import com.octal.supa.exceptions.CodeException;
+import com.octal.supa.exceptions.ErrorCode;
+import com.octal.supa.repositories.CreateCustomerQueueRepository;
+import com.octal.supa.service.rest.CustomerRestService;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+@Service
+public class CustomerRestServiceImpl implements CustomerRestService {
+
+    private final CreateCustomerQueueRepository createCustomerQueueRepository;
+
+    public CustomerRestServiceImpl(CreateCustomerQueueRepository createCustomerQueueRepository) {
+        this.createCustomerQueueRepository = createCustomerQueueRepository;
+    }
+
+    @Override
+    public void createCustomerQueue(CustomerRestDTO.CreateQueue createQueue) throws CodeException {
+        Optional<CreateCustomerQueue> createCustomerQueueCheck = createCustomerQueueRepository.findByFullNameAndCustomerId(createQueue.getFullName(), createQueue.getCustomerId());
+        if (createCustomerQueueCheck.isPresent())
+            throw new CodeException("Customer is already queued.", ErrorCode.COMMON);
+        CreateCustomerQueue createCustomerQueue = new CreateCustomerQueue();
+        createCustomerQueue.setActive(createQueue.getActive());
+        createCustomerQueue.setFullName(createQueue.getFullName());
+        createCustomerQueue.setCustomerId(createQueue.getCustomerId());
+        createCustomerQueue.setEmail(createQueue.getEmail());
+        createCustomerQueue.setSecondaryEmail(createQueue.getSecondaryEmail());
+        createCustomerQueue.setMobile(createQueue.getMobile());
+        createCustomerQueue.setAlterNativeMobile1(createQueue.getAlterNativeMobile1());
+        createCustomerQueue.setAlterNativeMobile2(createQueue.getAlterNativeMobile2());
+        createCustomerQueue.setAddress(createQueue.getAddress());
+        createCustomerQueue.setGender(createQueue.getGender());
+        createCustomerQueue.setCustomerTypeId(createQueue.getCustomerTypeId());
+        createCustomerQueue.setCustomerTypeName(createQueue.getCustomerTypeName());
+        createCustomerQueue.setCustomerUuid(createQueue.getCustomerUuid());
+        createCustomerQueue.setSyncStatus("QUEUE");
+        createCustomerQueueRepository.save(createCustomerQueue);
+    }
+}

@@ -1,4 +1,4 @@
-package com.octal.supa.dto;
+package com.octal.supa.dto.soap;
 
 import lombok.Data;
 
@@ -21,6 +21,18 @@ public class CreateCustomerResponse {
             @Data
             public static class CustomerRet{
                 private String ListID;
+                private String TimeCreated;
+                private String TimeModified;
+                private String EditSequence;
+                private String Name;
+                private String FullName;
+                private String IsActive;
+                private String Sublevel;
+                private String FirstName;
+                private String Balance;
+                private String TotalBalance;
+                private String JobStatus;
+                private String PreferredDeliveryMethod;
             }
         }
     }

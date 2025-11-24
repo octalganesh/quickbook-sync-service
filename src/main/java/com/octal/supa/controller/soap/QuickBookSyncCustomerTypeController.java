@@ -1,8 +1,7 @@
 package com.octal.supa.controller.soap;
 
 import com.octal.supa.dto.ApiResponse;
-import com.octal.supa.service.soap.CreateCustomerService;
-import com.octal.supa.service.soap.CreateInvoiceService;
+import com.octal.supa.service.soap.CustomerTypeService;
 import com.octal.supa.service.soap.InventoryPartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,20 +13,23 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/sync/invoice")
-public class QuickBookCreateInvoiceController {
-
+@RequestMapping("/sync/customer/type")
+public class QuickBookSyncCustomerTypeController {
 
     @Autowired
-    private CreateInvoiceService createInvoiceService;
+    private CustomerTypeService customerTypeService;
 
-    @GetMapping(value = "/create")
-    public ResponseEntity<ApiResponse> createInvoice() {
-        return new ResponseEntity<>(new ApiResponse("Create Invoice Heath Check Success!", null, "200", HttpStatus.OK), HttpStatus.OK);
+    @GetMapping(value = "/list")
+    public ResponseEntity<ApiResponse> items(HttpServletRequest request) {
+        try {
+            return new ResponseEntity<>(new ApiResponse("Sync Customer Type List!", null, "200", HttpStatus.OK), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ApiResponse("Sync Customer Type List!", null, "200", HttpStatus.OK), HttpStatus.OK);
+        }
     }
 
     @PostMapping(
-            value = "/create",
+            value = "/list",
             consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_XML_VALUE},
             produces = {MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_XML_VALUE}
     )
@@ -36,14 +38,14 @@ public class QuickBookCreateInvoiceController {
             if (xmlPayload.contains("<authenticate")) {
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(createInvoiceService.getSyncAuthToken());
+                        .body(authenticateResponse());
             } else if (xmlPayload.contains("<sendRequestXML")) {
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(createInvoiceService.syncInvoiceFromQueue());
+                        .body(sendRequestXMLResponse());
             } else if (xmlPayload.contains("<receiveResponseXML")) {
                 try {
-                    createInvoiceService.createSyncInvoiceFromQuickBookWebConnector(xmlPayload);
+                    customerTypeService.syncCustomerTypeFromQuickBookWebConnector(xmlPayload);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -51,9 +53,6 @@ public class QuickBookCreateInvoiceController {
                         .contentType(MediaType.TEXT_XML)
                         .body(receiveResponseXMLResponse());
             } else if (xmlPayload.contains("<getLastError")) {
-                System.out.println("==== getLastError() ====");
-                System.out.println(xmlPayload);  // THIS contains the actual QB error
-                System.out.println("================================");
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
                         .body(getLastErrorResponse());
@@ -72,6 +71,43 @@ public class QuickBookCreateInvoiceController {
                     .contentType(MediaType.TEXT_XML)
                     .body(errorSOAP(e.getMessage()));
         }
+    }
+
+    // 1️⃣ authenticate
+    private String authenticateResponse() {
+        String token = "session_sync_customer_type_" + UUID.randomUUID();
+        return "<?xml version=\"1.0\"?>" +
+                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+                "  <soap:Body>" +
+                "    <authenticateResponse xmlns=\"http://developer.intuit.com/\">" +
+                "      <authenticateResult>" +
+                "        <string>" + token + "</string>" +
+                "        <string/>" +
+                "      </authenticateResult>" +
+                "    </authenticateResponse>" +
+                "  </soap:Body>" +
+                "</soap:Envelope>";
+    }
+
+
+    private String sendRequestXMLResponse() {
+        String request = "<?xml version=\"1.0\"?>" +
+                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+                "  <soap:Body>" +
+                "    <sendRequestXMLResponse xmlns=\"http://developer.intuit.com/\">" +
+                "      <sendRequestXMLResult><![CDATA[" +
+                "        <?qbxml version=\"13.0\"?>" +
+                "        <QBXML>" +
+                "          <QBXMLMsgsRq onError=\"stopOnError\">" +
+                "            <CustomerTypeQueryRq>" +
+                "            </CustomerTypeQueryRq>" +
+                "          </QBXMLMsgsRq>" +
+                "        </QBXML>" +
+                "      ]]></sendRequestXMLResult>" +
+                "    </sendRequestXMLResponse>" +
+                "  </soap:Body>" +
+                "</soap:Envelope>";
+        return request;
     }
 
     // 3️⃣ receiveResponseXML
@@ -104,7 +140,7 @@ public class QuickBookCreateInvoiceController {
                 "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
                 "  <soap:Body>" +
                 "    <closeConnectionResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <closeConnectionResult>Customer Create successfully.</closeConnectionResult>" +
+                "      <closeConnectionResult>Sync completed successfully.</closeConnectionResult>" +
                 "    </closeConnectionResponse>" +
                 "  </soap:Body>" +
                 "</soap:Envelope>";
@@ -133,4 +169,5 @@ public class QuickBookCreateInvoiceController {
                 "  </soap:Body>" +
                 "</soap:Envelope>";
     }
+
 }

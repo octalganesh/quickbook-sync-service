@@ -27,4 +27,6 @@ public interface CreateCustomerQueueRepository extends JpaRepository<CreateCusto
     void resetAllActiveTokens();
 
     Optional<CreateCustomerQueue> findByUuid(String uuid);
+
+    Optional<CreateCustomerQueue> findByFullNameAndCustomerId(String fullName, String customerId);
 }

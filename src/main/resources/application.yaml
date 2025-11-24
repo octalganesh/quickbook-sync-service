@@ -18,7 +18,6 @@ spring:
             enable: true
     protocol: smtp
     test-connection: false
-    from: info@thepraxo.com
   jpa:
     hibernate:
       ddl-auto: update
