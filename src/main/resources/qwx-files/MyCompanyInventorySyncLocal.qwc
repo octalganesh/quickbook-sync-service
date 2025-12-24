@@ -1,12 +1,12 @@
 <QBWCXML>
-  <AppName>Inventory Sync Service Local</AppName>
+  <AppName>Inventory Sync Service Local test</AppName>
   <AppID></AppID>
-  <AppURL>https://unbidden-camphoric-willie.ngrok-free.dev/api/quickbook-sync-service/sync/items</AppURL>
+  <AppURL>http://localhost:8765/api/quickbook-sync-service/sync/items</AppURL>
   <AppDescription>Sync QuickBooks Desktop inventory with local Node.js service</AppDescription>
-  <AppSupport>https://unbidden-camphoric-willie.ngrok-free.dev/api/quickbook-sync-service/support</AppSupport>
+  <AppSupport>http://localhost:8765/api/quickbook-sync-service/support</AppSupport>
   <UserName>qbwc_user</UserName>
-  <OwnerID>{4B6A6203-7AEC-46E5-B7AA-A13EEC6E44C4}</OwnerID>
-  <FileID>{79BBC02C-F11E-4289-B698-1F59FF62E225}</FileID>
+  <OwnerID>{4B6A6203-7AEC-46E5-B7AA-A13EEC6E44C5}</OwnerID>
+  <FileID>{79BBC02C-F11E-4289-B698-1F59FF62E226}</FileID>
   <QBType>QBFS</QBType>
   <Scheduler>
     <!-- Run every 2 minutes -->

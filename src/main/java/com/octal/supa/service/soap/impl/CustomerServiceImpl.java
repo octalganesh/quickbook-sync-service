@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -49,7 +50,7 @@ public class CustomerServiceImpl implements CustomerService {
                                 customers.setBalance(customerRet.getBalance().getValue());
                                 customers.setTotalBalance(customerRet.getTotalBalance().getValue());
                                 customers.setJobStatus(customerRet.getJobStatus().getValue());
-                                customers.setPreferredDeliveryMethod(customerRet.getPreferredDeliveryMethod().getValue());
+                                customers.setPreferredDeliveryMethod(Objects.nonNull(customerRet.getPreferredDeliveryMethod())?customerRet.getPreferredDeliveryMethod().getValue():null);
                                 listOfCustomer.add(customers);
                             }
                         }

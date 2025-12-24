@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Element;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -95,6 +97,7 @@ public class InventoryPartServiceImpl implements InventoryPartService {
                 inventoryPart.setQuantityOnOrder(item.getQuantityOnOrder() != null ? item.getQuantityOnOrder().getValue() : null);
                 inventoryPart.setQuantityOnSalesOrder(item.getQuantityOnSalesOrder() != null ? item.getQuantityOnSalesOrder().getValue() : null);
                 inventoryPart.setItemType("Service");
+                inventoryPart.setUpdatedAt(LocalDateTime.now());
                 listOfInventoryParts.add(inventoryPart);
             } catch (Exception e) {
                 e.printStackTrace();

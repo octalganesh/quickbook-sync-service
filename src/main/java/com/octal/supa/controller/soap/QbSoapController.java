@@ -16,7 +16,6 @@ public class QbSoapController {
 
     @Autowired
     private InventoryPartService inventoryPartService;
-
     @GetMapping(value = "/items")
     public ResponseEntity<ApiResponse> items(HttpServletRequest request) {
         try {
