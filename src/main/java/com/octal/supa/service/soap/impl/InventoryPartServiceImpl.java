@@ -3,12 +3,17 @@ package com.octal.supa.service.soap.impl;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.octal.supa.clients.JobServiceClient;
+import com.octal.supa.dto.rest.InventoryRequestDTO;
 import com.octal.supa.dto.soap.InventoryPartDTO;
 import com.octal.supa.entities.InventoryPart;
+import com.octal.supa.exceptions.CodeException;
+import com.octal.supa.exceptions.ErrorCode;
 import com.octal.supa.repositories.InventoryPartRepository;
 import com.octal.supa.service.soap.InventoryPartService;
 import com.octal.supa.utils.ObjectOrArrayAdapter;
 import com.octal.supa.utils.XmlUtil;
+import io.netty.handler.codec.CodecException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Element;
@@ -18,13 +23,17 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class InventoryPartServiceImpl implements InventoryPartService {
 
     @Autowired
     private InventoryPartRepository inventoryPartRepository;
+    @Autowired
+    private JobServiceClient jobServiceClient;
 
+    private static final int BATCH_SIZE = 500;
 
     @Override
     public void syncItemFromQuickBookWebConnector(String xmlPayload) throws Exception {
@@ -44,7 +53,44 @@ public class InventoryPartServiceImpl implements InventoryPartService {
             processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemOtherChargeQueryRs().getItemOtherChargeRet(), listOfInventoryParts);
             processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemSalesTaxQueryRs().getItemSalesTaxRet(), listOfInventoryParts);
             processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemServiceQueryRs().getItemServiceRet(), listOfInventoryParts);
-            inventoryPartRepository.saveAll(listOfInventoryParts);
+            List<InventoryPart> inventoryParts = inventoryPartRepository.saveAll(listOfInventoryParts);
+            try{
+                List<InventoryRequestDTO.Add> responseList = inventoryParts.stream().map(this::convertDTO).collect(Collectors.toList());
+                jobServiceClient.saveInventory(responseList,1L,true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void syncInventoryToJobService() throws Exception {
+        try {
+            List<InventoryPart> inventoryParts = inventoryPartRepository.findAll();
+            if (inventoryParts.isEmpty()) {
+                return;
+            }
+            List<InventoryRequestDTO.Add> batch = new ArrayList<>();
+            for (InventoryPart part : inventoryParts) {
+                batch.add(convertDTO(part));
+                if (batch.size() == BATCH_SIZE) {
+                    sendBatch(batch);
+                    batch.clear();
+                }
+            }
+            if (!batch.isEmpty()) {
+                sendBatch(batch);
+            }
+        } catch (Exception e) {
+            throw new CodeException("Failed to sync inventory to job service", ErrorCode.COMMON);
+        }
+    }
+
+    private void sendBatch(List<InventoryRequestDTO.Add> batch) {
+        try{
+            jobServiceClient.saveInventory(batch, 1L, true);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -119,5 +165,50 @@ public class InventoryPartServiceImpl implements InventoryPartService {
         } catch (Exception e) {
             return "";
         }
+    }
+
+
+    private InventoryRequestDTO.Add convertDTO(InventoryPart part) {
+        InventoryRequestDTO.Add dto = new InventoryRequestDTO.Add();
+        dto.setListId(part.getListId());
+        dto.setTimeCreated(part.getTimeCreated());
+        dto.setTimeModified(part.getTimeModified());
+        dto.setEditSequence(part.getEditSequence());
+        dto.setName(part.getName());
+        dto.setFullName(part.getFullName());
+        dto.setIsActive(part.getIsActive());
+        dto.setSublevel(part.getSublevel());
+        dto.setSalesTaxCodeListId(part.getSalesTaxCodeListId());
+        dto.setSalesTaxCodeFullName(part.getSalesTaxCodeFullName());
+        dto.setSalesOrPurchasePrice(part.getSalesOrPurchasePrice());
+        dto.setSalesOrPurchaseAccountFullName(part.getSalesOrPurchaseAccountFullName());
+        dto.setSalesOrPurchaseAccountListId(part.getSalesOrPurchaseAccountListId());
+        dto.setDiscountRatePercentage(part.getDiscountRatePercentage());
+        dto.setAccountListId(part.getAccountListId());
+        dto.setAccountFullName(part.getAccountFullName());
+        dto.setIncomeAccountListId(part.getIncomeAccountListId());
+        dto.setIncomeAccountFullName(part.getIncomeAccountFullName());
+        dto.setCogsAccountListId(part.getCogsAccountListId());
+        dto.setCogsAccountFullName(part.getCogsAccountFullName());
+        dto.setPrefVendorListId(part.getPrefVendorListId());
+        dto.setPrefVendorFullName(part.getPrefVendorFullName());
+        dto.setAssetAccountListId(part.getAssetAccountListId());
+        dto.setAssetAccountFullName(part.getAssetAccountFullName());
+        dto.setSalesDesc(part.getSalesDesc());
+        dto.setSalesPrice(part.getSalesPrice());
+        dto.setPurchaseDesc(part.getPurchaseDesc());
+        dto.setPurchaseCost(part.getPurchaseCost());
+        dto.setReorderPoint(part.getReorderPoint());
+        dto.setQuantityOnHand(part.getQuantityOnHand());
+        dto.setAverageCost(part.getAverageCost());
+        dto.setQuantityOnOrder(part.getQuantityOnOrder());
+        dto.setQuantityOnSalesOrder(part.getQuantityOnSalesOrder());
+        dto.setItemDesc(part.getItemDesc());
+        dto.setTaxRate(part.getTaxRate());
+        dto.setTaxVendorListId(part.getTaxVendorListId());
+        dto.setTaxVendorFullName(part.getTaxVendorFullName());
+        dto.setSalePrice(part.getSalePrice());
+        dto.setItemType(part.getItemType());
+        return dto;
     }
 }

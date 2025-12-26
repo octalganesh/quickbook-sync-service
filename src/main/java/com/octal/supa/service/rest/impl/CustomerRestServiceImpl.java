@@ -20,7 +20,7 @@ public class CustomerRestServiceImpl implements CustomerRestService {
     }
 
     @Override
-    public void createCustomerQueue(CustomerRestDTO.CreateQueue createQueue) throws CodeException {
+    public String createCustomerQueue(CustomerRestDTO.CreateQueue createQueue) throws CodeException {
         Optional<CreateCustomerQueue> createCustomerQueueCheck = createCustomerQueueRepository.findByFullNameAndCustomerId(createQueue.getFullName(), createQueue.getCustomerId());
         if (createCustomerQueueCheck.isPresent())
             throw new CodeException("Customer is already queued.", ErrorCode.COMMON);
@@ -39,6 +39,7 @@ public class CustomerRestServiceImpl implements CustomerRestService {
         createCustomerQueue.setCustomerTypeName(createQueue.getCustomerTypeName());
         createCustomerQueue.setCustomerUuid(createQueue.getCustomerUuid());
         createCustomerQueue.setSyncStatus("QUEUE");
-        createCustomerQueueRepository.save(createCustomerQueue);
+        CreateCustomerQueue save = createCustomerQueueRepository.save(createCustomerQueue);
+        return save.getUuid();
     }
 }

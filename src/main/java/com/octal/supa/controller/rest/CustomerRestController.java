@@ -22,8 +22,7 @@ public class CustomerRestController {
     @PostMapping(value = "/create")
     public ResponseEntity<ApiResponse> createCustomerQueue(@RequestBody CustomerRestDTO.CreateQueue createQueue, HttpServletRequest request) {
         try {
-            customerRestService.createCustomerQueue(createQueue);
-            return new ResponseEntity<>(new ApiResponse("Customer Queued Successfully!", null, "200", HttpStatus.OK), HttpStatus.OK);
+            return new ResponseEntity<>(new ApiResponse("Customer Queued Successfully!", customerRestService.createCustomerQueue(createQueue), "200", HttpStatus.OK), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new ApiResponse(e.getMessage(), null, "101", HttpStatus.OK), HttpStatus.OK);
         }
