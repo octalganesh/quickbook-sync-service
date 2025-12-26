@@ -28,4 +28,6 @@ public interface CreateInvoiceQueueRepository extends JpaRepository<CreateInvoic
     void resetAllActiveTokens();
 
     Optional<CreateInvoiceQueue> findByUuid(String uuid);
+
+    Optional<CreateInvoiceQueue> findByRefId(String refId);
 }
