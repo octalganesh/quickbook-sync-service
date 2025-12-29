@@ -20,9 +20,8 @@ import org.w3c.dom.Element;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,9 +53,9 @@ public class InventoryPartServiceImpl implements InventoryPartService {
             processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemSalesTaxQueryRs().getItemSalesTaxRet(), listOfInventoryParts);
             processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemServiceQueryRs().getItemServiceRet(), listOfInventoryParts);
             List<InventoryPart> inventoryParts = inventoryPartRepository.saveAll(listOfInventoryParts);
-            try{
+            try {
                 List<InventoryRequestDTO.Add> responseList = inventoryParts.stream().map(this::convertDTO).collect(Collectors.toList());
-                jobServiceClient.saveInventory(responseList,1L,true);
+                jobServiceClient.saveInventory(responseList, 1L, true);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -86,8 +85,42 @@ public class InventoryPartServiceImpl implements InventoryPartService {
         }
     }
 
+    @Override
+    public void updateInventoryQuantities(List<InventoryRequestDTO.Add> addList) throws CodecException {
+        if (addList == null || addList.isEmpty()) {
+            return;
+        }
+        List<String> listIds = addList.stream()
+                .map(InventoryRequestDTO.Add::getListId)
+                .filter(Objects::nonNull).distinct().collect(Collectors.toList());
+
+        Map<String, InventoryPart> inventoryMap =
+                inventoryPartRepository.findByListIdIn(listIds)
+                        .stream()
+                        .collect(Collectors.toMap(InventoryPart::getListId, Function.identity()));
+
+        for (InventoryRequestDTO.Add dto : addList) {
+            InventoryPart inventory = inventoryMap.get(dto.getListId());
+            if (inventory == null) {
+                continue;
+            }
+            if (dto.getQuantityOnHand() != null) {
+                inventory.setQuantityOnHand(dto.getQuantityOnHand());
+            }
+            if (dto.getQuantityOnOrder() != null) {
+                inventory.setQuantityOnOrder(dto.getQuantityOnOrder());
+            }
+            if (dto.getQuantityOnSalesOrder() != null) {
+                inventory.setQuantityOnSalesOrder(dto.getQuantityOnSalesOrder());
+            }
+            inventory.setUpdatedAt(LocalDateTime.now());
+        }
+        inventoryPartRepository.saveAll(inventoryMap.values());
+
+    }
+
     private void sendBatch(List<InventoryRequestDTO.Add> batch) {
-        try{
+        try {
             jobServiceClient.saveInventory(batch, 1L, true);
         } catch (Exception e) {
             e.printStackTrace();
