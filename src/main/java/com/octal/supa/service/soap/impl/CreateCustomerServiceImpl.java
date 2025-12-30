@@ -41,43 +41,47 @@ public class CreateCustomerServiceImpl implements CreateCustomerService {
 
     @Override
     public void createSyncCustomerFromQuickBookWebConnector(String xmlPayload) throws Exception {
-            String payloadJson = convertResponseXmlToJson(xmlPayload);
-            Gson gson = new Gson();
-            CreateCustomerResponse createCustomerResponse = gson.fromJson(payloadJson, CreateCustomerResponse.class);
-            if (createCustomerResponse != null && !TextUtils.isEmpty(createCustomerResponse.getTicket())) {
-                Optional<CreateCustomerQueue> createCustomerQueue = createCustomerQueueRepository.findByUuid(createCustomerResponse.getTicket());
-                if (createCustomerQueue.isPresent()) {
-                    createCustomerQueue.get().setStatusCode(createCustomerResponse.getQBXMLMsgsRs() != null ?
-                            createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs() != null ?
-                                    !TextUtils.isEmpty(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusCode()) ? createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusCode() : null : null : null);
-                    createCustomerQueue.get().setStatusSeverity(createCustomerResponse.getQBXMLMsgsRs() != null ?
-                            createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs() != null ?
-                                    !TextUtils.isEmpty(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusSeverity()) ? createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusSeverity() : null : null : null);
-                    createCustomerQueue.get().setStatusMessage(createCustomerResponse.getQBXMLMsgsRs() != null ?
-                            createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs() != null ?
-                                    !TextUtils.isEmpty(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusMessage()) ? createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusMessage() : null : null : null);
-                    createCustomerQueue.get().setQuickBookCustomerId(createCustomerResponse.getQBXMLMsgsRs() != null ?
-                            createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs() != null ?
-                                    createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet() != null ? !TextUtils.isEmpty(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet().getListID()) ? createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet().getListID()
-                                            : null : null : null : null);
-                    if (createCustomerResponse.getQBXMLMsgsRs() != null && createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs() != null && !TextUtils.isEmpty(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusCode()) && (createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusCode().equalsIgnoreCase("0") || createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusCode().equalsIgnoreCase("1"))) {
-                        createCustomerQueue.get().setSyncStatus("SUCCESS");
-                        createCustomerQueue.get().setDeleted(true);
-                    } else {
-                        createCustomerQueue.get().setSyncStatus("FAILED");
-                    }
-                    createCustomerQueue.get().setCreateCustomerXmlResponse(xmlPayload);
-                    createCustomerQueue.get().setCreateCustomerJsonResponse(payloadJson);
-                    createCustomerQueue.get().setActiveToken(null);
-                    createCustomerQueueRepository.save(createCustomerQueue.get());
-                    if(createCustomerQueue.get().getSyncStatus().equalsIgnoreCase("SUCCESS")){
+        String payloadJson = convertResponseXmlToJson(xmlPayload);
+        Gson gson = new Gson();
+        CreateCustomerResponse createCustomerResponse = gson.fromJson(payloadJson, CreateCustomerResponse.class);
+        if (createCustomerResponse != null && !TextUtils.isEmpty(createCustomerResponse.getTicket())) {
+            Optional<CreateCustomerQueue> createCustomerQueue = createCustomerQueueRepository.findByUuid(createCustomerResponse.getTicket());
+            if (createCustomerQueue.isPresent()) {
+                createCustomerQueue.get().setStatusCode(createCustomerResponse.getQBXMLMsgsRs() != null ?
+                        createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs() != null ?
+                                !TextUtils.isEmpty(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusCode()) ? createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusCode() : null : null : null);
+                createCustomerQueue.get().setStatusSeverity(createCustomerResponse.getQBXMLMsgsRs() != null ?
+                        createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs() != null ?
+                                !TextUtils.isEmpty(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusSeverity()) ? createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusSeverity() : null : null : null);
+                createCustomerQueue.get().setStatusMessage(createCustomerResponse.getQBXMLMsgsRs() != null ?
+                        createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs() != null ?
+                                !TextUtils.isEmpty(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusMessage()) ? createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusMessage() : null : null : null);
+                createCustomerQueue.get().setQuickBookCustomerId(createCustomerResponse.getQBXMLMsgsRs() != null ?
+                        createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs() != null ?
+                                createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet() != null ? !TextUtils.isEmpty(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet().getListID()) ? createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet().getListID()
+                                        : null : null : null : null);
+                if (createCustomerResponse.getQBXMLMsgsRs() != null && createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs() != null && !TextUtils.isEmpty(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusCode()) && (createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusCode().equalsIgnoreCase("0") || createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getStatusCode().equalsIgnoreCase("1"))) {
+                    createCustomerQueue.get().setSyncStatus("SUCCESS");
+                    createCustomerQueue.get().setDeleted(true);
+                } else {
+                    createCustomerQueue.get().setSyncStatus("FAILED");
+                }
+                createCustomerQueue.get().setCreateCustomerXmlResponse(xmlPayload);
+                createCustomerQueue.get().setCreateCustomerJsonResponse(payloadJson);
+                createCustomerQueue.get().setActiveToken(null);
+                createCustomerQueueRepository.save(createCustomerQueue.get());
+                customerService.processCustomerIntoDB(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet());
+                processCreateCustomerWebBook(createCustomerQueue.get().getCustomerUuid(), createCustomerQueue.get().getQuickBookCustomerId());
+                if (createCustomerResponse.getQBXMLMsgsRs() != null && createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs() != null && createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet() != null) {
+                    if (createCustomerQueue.get().getSyncStatus().equalsIgnoreCase("SUCCESS")) {
                         syncCustomerFromQueueScheduler(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet());
                     }
                     customerService.processCustomerIntoDB(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet());
-                    processCreateCustomerWebBook(createCustomerQueue.get().getCustomerUuid(), createCustomerQueue.get().getQuickBookCustomerId());
                 }
-                System.out.println(createCustomerResponse);
+                //processCreateCustomerWebBook(createCustomerQueue.get().getCustomerUuid(), createCustomerQueue.get().getQuickBookCustomerId());
             }
+            System.out.println(createCustomerResponse);
+        }
 
     }
 
@@ -107,22 +111,22 @@ public class CreateCustomerServiceImpl implements CreateCustomerService {
 //                        : createCustomerQueue.getGender().equalsIgnoreCase("FEMALE") ? "Ms." : "")
 //                        + "</Salutation>";
 //            }
-            
+
             // Email (optional)
             if (!TextUtils.isEmpty(createCustomerQueue.getEmail())) {
                 conditionalElements += "<Email>" + createCustomerQueue.getEmail() + "</Email>";
             }
-            
+
             // Cc (optional)
             if (!TextUtils.isEmpty(createCustomerQueue.getSecondaryEmail())) {
                 conditionalElements += "<Cc>" + createCustomerQueue.getSecondaryEmail() + "</Cc>";
             }
-            
+
 //            // Contact (optional)
             if (!TextUtils.isEmpty(createCustomerQueue.getMobile())) {
                 conditionalElements += "<Contact>" + createCustomerQueue.getMobile() + "</Contact>";
             }
-            
+
             // Phone (optional)
 //            if (!TextUtils.isEmpty(createCustomerQueue.getAlterNativeMobile1())) {
 //                conditionalElements += "<Phone>" + createCustomerQueue.getAlterNativeMobile1() + "</Phone>";
@@ -132,7 +136,7 @@ public class CreateCustomerServiceImpl implements CreateCustomerService {
 //            if (!TextUtils.isEmpty(createCustomerQueue.getAlterNativeMobile2())) {
 //                conditionalElements += "<AltPhone>" + createCustomerQueue.getAlterNativeMobile2() + "</AltPhone>";
 //            }
-            
+
             // CustomerTypeRef (optional)
             if ((createCustomerQueue.getCustomerTypeId() != null && !createCustomerQueue.getCustomerTypeId().isEmpty()) ||
                     (createCustomerQueue.getCustomerTypeName() != null && !createCustomerQueue.getCustomerTypeName().isEmpty())) {
@@ -148,7 +152,7 @@ public class CreateCustomerServiceImpl implements CreateCustomerService {
 
                 conditionalElements += "</CustomerTypeRef>";
             }
-            
+
             String request = "<?xml version=\"1.0\"?>" +
                     "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
                     "  <soap:Body>" +
@@ -159,10 +163,10 @@ public class CreateCustomerServiceImpl implements CreateCustomerService {
                     "          <QBXMLMsgsRq onError=\"stopOnError\">" +
                     "            <CustomerAddRq>" +
                     "               <CustomerAdd>" +
-                    "                   <Name>" + createCustomerQueue.getFullName() + createCustomerQueue.getCustomerId() + "</Name>" +
+                    "                   <Name>" + createCustomerQueue.getFullName() + "</Name>" +
                     "                   <IsActive>" + createCustomerQueue.getActive() + "</IsActive>" +
                     "                   <FirstName>" + createCustomerQueue.getFullName() + "</FirstName>" +
-                    "    "    +conditionalElements +
+                    "    " + conditionalElements +
                     "               </CustomerAdd>" +
                     "            </CustomerAddRq>" +
                     "          </QBXMLMsgsRq>" +
