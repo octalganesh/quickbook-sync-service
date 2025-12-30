@@ -70,11 +70,16 @@ public class CreateCustomerServiceImpl implements CreateCustomerService {
                 createCustomerQueue.get().setCreateCustomerJsonResponse(payloadJson);
                 createCustomerQueue.get().setActiveToken(null);
                 createCustomerQueueRepository.save(createCustomerQueue.get());
-                customerService.processCustomerIntoDB(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet());
-                processCreateCustomerWebBook(createCustomerQueue.get().getCustomerUuid(), createCustomerQueue.get().getQuickBookCustomerId());
                 if (createCustomerResponse.getQBXMLMsgsRs() != null && createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs() != null && createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet() != null) {
                     if (createCustomerQueue.get().getSyncStatus().equalsIgnoreCase("SUCCESS")) {
-                        syncCustomerFromQueueScheduler(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet());
+                        CreateCustomerResponse.QBXMLMsgsRs.CustomerAddRs.CustomerRet customerAddRs= createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet();
+                        if (!TextUtils.isEmpty(customerAddRs.getListID())) {
+                            CustomerRestDTO.CreateQueue createQueue = new CustomerRestDTO.CreateQueue();
+                            createQueue.setListId(customerAddRs.getListID());
+                            createQueue.setCustomerUuid(createCustomerQueue.get().getCustomerUuid());
+                            createQueue.setFullName(customerAddRs.getFullName());
+                            syncCustomerFromQueueScheduler(createQueue);
+                        }
                     }
                     customerService.processCustomerIntoDB(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet());
                 }
@@ -85,13 +90,8 @@ public class CreateCustomerServiceImpl implements CreateCustomerService {
 
     }
 
-    public void syncCustomerFromQueueScheduler(CreateCustomerResponse.QBXMLMsgsRs.CustomerAddRs.CustomerRet customerRet) {
-        if (!TextUtils.isEmpty(customerRet.getListID())) {
-            CustomerRestDTO.CreateQueue createQueue = new CustomerRestDTO.CreateQueue();
-            createQueue.setListId(customerRet.getListID());
-            createQueue.setFullName(customerRet.getFullName());
-            eventPublisher.publishEvent(new CustomerSyncEvent(createQueue));
-        }
+    public void syncCustomerFromQueueScheduler(CustomerRestDTO.CreateQueue createQueue) {
+        eventPublisher.publishEvent(new CustomerSyncEvent(createQueue));
     }
 
     @Override
