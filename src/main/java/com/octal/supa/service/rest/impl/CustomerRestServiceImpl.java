@@ -42,7 +42,7 @@ public class CustomerRestServiceImpl implements CustomerRestService {
         createCustomerQueue.setAddress(createQueue.getAddress());
         createCustomerQueue.setGender(createQueue.getGender());
         if(createQueue.getCustomerTypeName() != null){
-            Optional<CustomerType> byName = customerTypeRepository.findByName(createCustomerQueue.getCustomerTypeName());
+            Optional<CustomerType> byName = customerTypeRepository.findByName(createQueue.getCustomerTypeName());
             byName.ifPresent(customerType -> createCustomerQueue.setCustomerTypeId(customerType.getListId()));
             createCustomerQueue.setCustomerTypeName(createQueue.getCustomerTypeName());
         }
