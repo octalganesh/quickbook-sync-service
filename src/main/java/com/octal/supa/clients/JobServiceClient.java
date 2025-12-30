@@ -3,6 +3,7 @@ package com.octal.supa.clients;
 import com.octal.supa.dto.ApiResponse;
 import com.octal.supa.dto.rest.CustomerRestDTO;
 import com.octal.supa.dto.rest.InventoryRequestDTO;
+import com.octal.supa.dto.rest.InvoiceRestDTO;
 import com.octal.supa.dto.soap.InventoryPartDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -21,4 +22,7 @@ public interface JobServiceClient {
     @PostMapping("/inventory/add")
     ResponseEntity<?> saveInventory(@RequestBody List<InventoryRequestDTO.Add> addList, @RequestHeader("tenantId") Long tenantId,
                                     @RequestHeader("superAdmin") boolean superAdmin);
+
+    @PostMapping("/jobs/invoice/update-details")
+    ResponseEntity<?> updateInvoiceDetails(@RequestBody InvoiceRestDTO.Add add);
 }

@@ -2,10 +2,13 @@ package com.octal.supa.service.rest.impl;
 
 import com.octal.supa.dto.rest.CustomerRestDTO;
 import com.octal.supa.entities.CreateCustomerQueue;
+import com.octal.supa.entities.CustomerType;
 import com.octal.supa.exceptions.CodeException;
 import com.octal.supa.exceptions.ErrorCode;
 import com.octal.supa.repositories.CreateCustomerQueueRepository;
+import com.octal.supa.repositories.CustomerTypeRepository;
 import com.octal.supa.service.rest.CustomerRestService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -14,6 +17,9 @@ import java.util.Optional;
 public class CustomerRestServiceImpl implements CustomerRestService {
 
     private final CreateCustomerQueueRepository createCustomerQueueRepository;
+
+    @Autowired
+    private CustomerTypeRepository customerTypeRepository;
 
     public CustomerRestServiceImpl(CreateCustomerQueueRepository createCustomerQueueRepository) {
         this.createCustomerQueueRepository = createCustomerQueueRepository;
@@ -35,8 +41,11 @@ public class CustomerRestServiceImpl implements CustomerRestService {
         createCustomerQueue.setAlterNativeMobile2(createQueue.getAlterNativeMobile2());
         createCustomerQueue.setAddress(createQueue.getAddress());
         createCustomerQueue.setGender(createQueue.getGender());
-        createCustomerQueue.setCustomerTypeId(createQueue.getCustomerTypeId());
-        createCustomerQueue.setCustomerTypeName(createQueue.getCustomerTypeName());
+        if(createQueue.getCustomerTypeName() != null){
+            Optional<CustomerType> byName = customerTypeRepository.findByName(createCustomerQueue.getCustomerTypeName());
+            byName.ifPresent(customerType -> createCustomerQueue.setCustomerTypeId(customerType.getListId()));
+            createCustomerQueue.setCustomerTypeName(createQueue.getCustomerTypeName());
+        }
         createCustomerQueue.setCustomerUuid(createQueue.getCustomerUuid());
         createCustomerQueue.setSyncStatus("QUEUE");
         CreateCustomerQueue save = createCustomerQueueRepository.save(createCustomerQueue);

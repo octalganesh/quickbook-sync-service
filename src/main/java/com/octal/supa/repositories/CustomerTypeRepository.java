@@ -10,4 +10,6 @@ public interface CustomerTypeRepository extends JpaRepository<CustomerType, Long
 
     Optional<CustomerType> findByListId(String listId);
 
+    Optional<CustomerType> findByName(String name);
+
 }

@@ -17,4 +17,7 @@ public class AsyncConfiguration {
     @Bean(name = "customerSyncExecutor")
     public Executor handleCustomerSync() {return new ThreadPoolTaskExecutor();}
 
+    @Bean(name = "invoiceSyncExecutor")
+    public Executor handleInvoiceSync() {return new ThreadPoolTaskExecutor();}
+
 }

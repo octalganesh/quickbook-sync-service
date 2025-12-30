@@ -5,13 +5,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.gson.Gson;
+import com.octal.supa.dto.rest.InvoiceRestDTO;
 import com.octal.supa.dto.soap.CreateInvoiceResponse;
 import com.octal.supa.entities.CreateInvoiceQueue;
+import com.octal.supa.event.InvoiceSyncEvent;
 import com.octal.supa.repositories.CreateInvoiceQueueRepository;
 import com.octal.supa.service.soap.CreateInvoiceService;
 import com.octal.supa.utils.TextUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,9 @@ public class CreateInvoiceServiceImpl implements CreateInvoiceService {
 
     @Autowired
     private CreateInvoiceQueueRepository createInvoiceQueueRepository;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     @Override
     public void createSyncInvoiceFromQuickBookWebConnector(String xmlPayload) throws Exception {
@@ -58,9 +64,21 @@ public class CreateInvoiceServiceImpl implements CreateInvoiceService {
                 createInvoiceQueue.get().setCreateInvoiceXmlResponse(xmlPayload);
                 createInvoiceQueue.get().setCreateInvoiceJsonResponse(payloadJson);
                 createInvoiceQueue.get().setActiveToken(null);
-                createInvoiceQueueRepository.save(createInvoiceQueue.get());
+                CreateInvoiceQueue savedInvoiceQueue = createInvoiceQueueRepository.save(createInvoiceQueue.get());
+                if(savedInvoiceQueue.getSyncStatus().equalsIgnoreCase("SUCCESS")){
+                    syncInvoiceFromQueueScheduler(savedInvoiceQueue);
+                }
 //                customerService.processCustomerIntoDB(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet());
             }
+        }
+    }
+
+    public void syncInvoiceFromQueueScheduler(CreateInvoiceQueue createInvoiceQueue) {
+        if (!TextUtils.isEmpty(createInvoiceQueue.getListId())) {
+            InvoiceRestDTO.Add createQueue = new InvoiceRestDTO.Add();
+            createQueue.setListId(createInvoiceQueue.getListId());
+            createQueue.setRefId(createInvoiceQueue.getRefId());
+            eventPublisher.publishEvent(new InvoiceSyncEvent(createQueue));
         }
     }
 
