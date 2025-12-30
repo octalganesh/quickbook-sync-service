@@ -7,6 +7,7 @@ import com.octal.supa.clients.JobServiceClient;
 import com.octal.supa.dto.rest.InventoryRequestDTO;
 import com.octal.supa.dto.soap.InventoryPartDTO;
 import com.octal.supa.entities.InventoryPart;
+import com.octal.supa.event.InventorySyncEvent;
 import com.octal.supa.exceptions.CodeException;
 import com.octal.supa.exceptions.ErrorCode;
 import com.octal.supa.repositories.InventoryPartRepository;
@@ -15,6 +16,7 @@ import com.octal.supa.utils.ObjectOrArrayAdapter;
 import com.octal.supa.utils.XmlUtil;
 import io.netty.handler.codec.CodecException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Element;
 
@@ -33,6 +35,9 @@ public class InventoryPartServiceImpl implements InventoryPartService {
     private JobServiceClient jobServiceClient;
 
     private static final int BATCH_SIZE = 500;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     @Override
     public void syncItemFromQuickBookWebConnector(String xmlPayload) throws Exception {
@@ -53,12 +58,9 @@ public class InventoryPartServiceImpl implements InventoryPartService {
             processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemSalesTaxQueryRs().getItemSalesTaxRet(), listOfInventoryParts);
             processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemServiceQueryRs().getItemServiceRet(), listOfInventoryParts);
             List<InventoryPart> inventoryParts = inventoryPartRepository.saveAll(listOfInventoryParts);
-            try {
-                List<InventoryRequestDTO.Add> responseList = inventoryParts.stream().map(this::convertDTO).collect(Collectors.toList());
-                jobServiceClient.saveInventory(responseList, 1L, true);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            List<InventoryRequestDTO.Add> responseList = inventoryParts.stream()
+                            .map(this::convertDTO).collect(Collectors.toList());
+            eventPublisher.publishEvent(new InventorySyncEvent(responseList, 1L, true));
         }
     }
 

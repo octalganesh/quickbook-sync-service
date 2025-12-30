@@ -14,5 +14,8 @@ public interface AdminServiceClient {
 
     @PostMapping("/quickBooks-web-connector/event")
     ResponseEntity<?> createCustomerEventCallBack(@RequestBody CustomerRestDTO.CallBackEvent callBackEvent);
+
+    @PostMapping("/quickBooks/customer/update")
+    ResponseEntity<?> updateCustomer(@RequestBody CustomerRestDTO.CreateQueue createQueue);
 }
 

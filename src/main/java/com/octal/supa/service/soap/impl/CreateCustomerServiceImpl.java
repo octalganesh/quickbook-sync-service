@@ -9,12 +9,14 @@ import com.octal.supa.clients.AdminServiceClient;
 import com.octal.supa.dto.rest.CustomerRestDTO;
 import com.octal.supa.dto.soap.CreateCustomerResponse;
 import com.octal.supa.entities.CreateCustomerQueue;
+import com.octal.supa.event.CustomerSyncEvent;
 import com.octal.supa.repositories.CreateCustomerQueueRepository;
 import com.octal.supa.service.soap.CreateCustomerService;
 import com.octal.supa.service.soap.CustomerService;
 import com.octal.supa.utils.TextUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,9 @@ public class CreateCustomerServiceImpl implements CreateCustomerService {
 
     @Autowired
     private AdminServiceClient adminServiceClient;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
 
     @Override
@@ -65,12 +70,24 @@ public class CreateCustomerServiceImpl implements CreateCustomerService {
                     createCustomerQueue.get().setCreateCustomerJsonResponse(payloadJson);
                     createCustomerQueue.get().setActiveToken(null);
                     createCustomerQueueRepository.save(createCustomerQueue.get());
+                    if(createCustomerQueue.get().getSyncStatus().equalsIgnoreCase("SUCCESS")){
+                        syncCustomerFromQueueScheduler(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet());
+                    }
                     customerService.processCustomerIntoDB(createCustomerResponse.getQBXMLMsgsRs().getCustomerAddRs().getCustomerRet());
                     processCreateCustomerWebBook(createCustomerQueue.get().getCustomerUuid(), createCustomerQueue.get().getQuickBookCustomerId());
                 }
                 System.out.println(createCustomerResponse);
             }
 
+    }
+
+    public void syncCustomerFromQueueScheduler(CreateCustomerResponse.QBXMLMsgsRs.CustomerAddRs.CustomerRet customerRet) {
+        if (!TextUtils.isEmpty(customerRet.getListID())) {
+            CustomerRestDTO.CreateQueue createQueue = new CustomerRestDTO.CreateQueue();
+            createQueue.setListId(customerRet.getListID());
+            createQueue.setFullName(customerRet.getFullName());
+            eventPublisher.publishEvent(new CustomerSyncEvent(createQueue));
+        }
     }
 
     @Override

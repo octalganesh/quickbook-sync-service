@@ -22,6 +22,7 @@ public class CustomerRestDTO {
         private String customerTypeId;
         private String customerTypeName;
         private String customerUuid;
+        private String listId;
     }
 
     @Data
