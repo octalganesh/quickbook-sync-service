@@ -6,11 +6,13 @@ import com.octal.supa.exceptions.CodeException;
 import com.octal.supa.exceptions.ErrorCode;
 import com.octal.supa.repositories.CreateInvoiceQueueRepository;
 import com.octal.supa.service.rest.InvoiceRestService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class InvoiceRestServiceImpl implements InvoiceRestService {
 
+    @Autowired
     private CreateInvoiceQueueRepository createInvoiceQueueRepository;
 
     @Override
