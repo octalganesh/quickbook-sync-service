@@ -1,6 +1,8 @@
 package com.octal.supa.service.soap.impl;
 
 import com.google.gson.Gson;
+import com.octal.supa.clients.AdminServiceClient;
+import com.octal.supa.dto.rest.CustomerDTO;
 import com.octal.supa.dto.soap.CreateCustomerResponse;
 import com.octal.supa.dto.soap.CustomerListSyncDTO;
 import com.octal.supa.entities.Customers;
@@ -15,12 +17,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
 
     @Autowired
     private CustomerRepository customerRepository;
+    @Autowired
+    private AdminServiceClient adminServiceClient;
 
     @Override
     public void syncCustomersFromQuickBookWebConnector(String xmlPayload) {
@@ -50,11 +55,27 @@ public class CustomerServiceImpl implements CustomerService {
                                 customers.setBalance(customerRet.getBalance().getValue());
                                 customers.setTotalBalance(customerRet.getTotalBalance().getValue());
                                 customers.setJobStatus(customerRet.getJobStatus().getValue());
-                                customers.setPreferredDeliveryMethod(Objects.nonNull(customerRet.getPreferredDeliveryMethod())?customerRet.getPreferredDeliveryMethod().getValue():null);
+                                if (customerRet.getPhone() != null && !TextUtils.isEmpty(customerRet.getPhone().getValue()))
+                                    customers.setPhoneNumber(customerRet.getPhone().getValue());
+
+                                if (customerRet.getEmail() != null && !TextUtils.isEmpty(customerRet.getEmail().getValue())) {
+                                    customers.setEmail(customerRet.getEmail().getValue());
+                                }
+                                if (customerRet.getCustomerTypeRef() != null) {
+                                    CustomerListSyncDTO.QBXMLMsgsRs.CustomerQueryRs.CustomerRet.CustomerTypeRef typeRef = customerRet.getCustomerTypeRef();
+                                    if (typeRef.getFullName() != null) {
+                                        customers.setCustomerTypeName(typeRef.getFullName().getValue());
+                                    }
+                                    if (typeRef.getListID() != null) {
+                                        customers.setCustomerTypeId(typeRef.getListID().getValue());
+                                    }
+                                }
+                                customers.setPreferredDeliveryMethod(Objects.nonNull(customerRet.getPreferredDeliveryMethod()) ? customerRet.getPreferredDeliveryMethod().getValue() : null);
                                 listOfCustomer.add(customers);
                             }
                         }
                         customerRepository.saveAll(listOfCustomer);
+                        syncCustomerFromQBDtoLocal(listOfCustomer);
                     }
                 }
             }
@@ -62,6 +83,43 @@ public class CustomerServiceImpl implements CustomerService {
             e.printStackTrace();
         }
     }
+
+    public void syncCustomerFromQBDtoLocal(List<Customers> customers) throws Exception {
+        try {
+            if (customers != null && !customers.isEmpty()) {
+                List<CustomerDTO> customerDTOList = customers.stream()
+                        .map(this::mapToCustomerDTO)
+                        .collect(Collectors.toList());
+                adminServiceClient.createCustomer(customerDTOList);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private CustomerDTO mapToCustomerDTO(Customers customer) {
+        CustomerDTO dto = new CustomerDTO();
+        dto.setListId(customer.getListId());
+        dto.setName(customer.getName());
+        dto.setFullName(customer.getFullName());
+        dto.setIsActive(customer.getIsActive());
+        dto.setTimeCreated(customer.getTimeCreated());
+        dto.setTimeModified(customer.getTimeModified());
+        dto.setEditSequence(customer.getEditSequence());
+        dto.setSublevel(customer.getSublevel());
+        dto.setBalance(customer.getBalance());
+        dto.setTotalBalance(customer.getTotalBalance());
+        dto.setJobStatus(customer.getJobStatus());
+        if (customer.getEmail() != null)
+            dto.setEmail(customer.getEmail());
+        if (customer.getCustomerTypeName() != null)
+            dto.setCustomerTypeName(customer.getCustomerTypeName());
+        if (customer.getPhoneNumber() != null)
+            dto.setMobileNo(customer.getPhoneNumber());
+        dto.setPreferredDeliveryMethod(customer.getPreferredDeliveryMethod());
+        return dto;
+    }
+
 
     @Override
     public void processCustomerIntoDB(CreateCustomerResponse.QBXMLMsgsRs.CustomerAddRs.CustomerRet customerRet) {

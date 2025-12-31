@@ -30,10 +30,19 @@ public class CustomerListSyncDTO {
                 private CommonValue TotalBalance;
                 private CommonValue JobStatus;
                 private CommonValue PreferredDeliveryMethod;
+                private CommonValue Phone;
+                private CommonValue Email;
+                private CustomerTypeRef CustomerTypeRef;
 
                 @Data
                 public static class CommonValue{
                     private String value;
+                }
+
+                @Data
+                public static class CustomerTypeRef {
+                    private CommonValue ListID;
+                    private CommonValue FullName;
                 }
 
             }

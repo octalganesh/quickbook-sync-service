@@ -23,6 +23,9 @@ public class Customers extends AbstractPersistable {
     @Column(name = "is_active")
     private String isActive;
 
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
     private String timeCreated;
     private String timeModified;
     private String editSequence;
@@ -31,4 +34,9 @@ public class Customers extends AbstractPersistable {
     private String totalBalance;
     private String jobStatus;
     private String preferredDeliveryMethod;
+
+    private String customerTypeId;
+    private String customerTypeName;
+    private String email;
+
 }
