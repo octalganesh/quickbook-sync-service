@@ -22,6 +22,7 @@ public class InvoiceRestServiceImpl implements InvoiceRestService {
         }
         CreateInvoiceQueue entity = new CreateInvoiceQueue();
         entity.setRefId(dto.getRefId());
+        entity.setInvoiceId(dto.getInvoiceId());
         entity.setListId(dto.getListId());
         entity.setCustomerListId(dto.getCustomerListId());
         entity.setCustomerFullName(dto.getCustomerFullName());

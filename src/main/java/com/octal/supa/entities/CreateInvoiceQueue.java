@@ -18,6 +18,9 @@ public class CreateInvoiceQueue extends AbstractPersistable {
     @Column(name = "list_id")
     private String listId;
 
+    @Column(name = "invoice_id")
+    private String invoiceId;
+
     @Column(name = "customer_list_id", nullable = false)
     private String customerListId;
 

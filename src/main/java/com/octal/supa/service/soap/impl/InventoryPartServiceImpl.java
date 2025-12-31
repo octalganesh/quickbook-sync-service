@@ -58,9 +58,13 @@ public class InventoryPartServiceImpl implements InventoryPartService {
             processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemSalesTaxQueryRs().getItemSalesTaxRet(), listOfInventoryParts);
             processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemServiceQueryRs().getItemServiceRet(), listOfInventoryParts);
             List<InventoryPart> inventoryParts = inventoryPartRepository.saveAll(listOfInventoryParts);
-            List<InventoryRequestDTO.Add> responseList = inventoryParts.stream()
-                            .map(this::convertDTO).collect(Collectors.toList());
-            eventPublisher.publishEvent(new InventorySyncEvent(responseList, 1L, true));
+            try {
+                List<InventoryRequestDTO.Add> responseList = inventoryParts.stream()
+                        .map(this::convertDTO).collect(Collectors.toList());
+                eventPublisher.publishEvent(new InventorySyncEvent(responseList, 1L, true));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

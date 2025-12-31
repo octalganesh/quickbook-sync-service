@@ -74,9 +74,9 @@ public class CreateInvoiceServiceImpl implements CreateInvoiceService {
     }
 
     public void syncInvoiceFromQueueScheduler(CreateInvoiceQueue createInvoiceQueue) {
-        if (!TextUtils.isEmpty(createInvoiceQueue.getListId())) {
+        if (!TextUtils.isEmpty(createInvoiceQueue.getRefId())) {
             InvoiceRestDTO.Add createQueue = new InvoiceRestDTO.Add();
-            createQueue.setListId(createInvoiceQueue.getListId());
+            createQueue.setInvoiceId(createInvoiceQueue.getInvoiceId());
             createQueue.setRefId(createInvoiceQueue.getRefId());
             eventPublisher.publishEvent(new InvoiceSyncEvent(createQueue));
         }
