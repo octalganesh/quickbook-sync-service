@@ -106,11 +106,10 @@ public class CreateInvoiceServiceImpl implements CreateInvoiceService {
                     "                   </CustomerRef>" +
                     "                   <InvoiceLineAdd>" +
                     "                       <ItemRef>" +
-                    "                           <ListID>80000065-1797318354</ListID>" +
                     "                           <FullName>UpFront</FullName>" +
                     "                       </ItemRef>" +
                     "                       <Quantity>1</Quantity>" +
-                    "                       <Amount>" + createInvoiceQueue.getAmount() + "</Amount>" +
+                    "                       <Rate>" + createInvoiceQueue.getAmount() + "</Rate>" +
                     "                   </InvoiceLineAdd>" +
                     "               </InvoiceAdd>" +
                     "            </InvoiceAddRq>" +
