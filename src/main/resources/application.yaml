@@ -1,49 +1,15 @@
-server:
-  port: 8089
-  error:
-    include-stacktrace: never
-
 spring:
-  application:
-    name: quickbook-sync-service
+  profiles:
+    active: dev
   mail:
-    default-encoding: UTF-8
-    host: smtp.sendgrid.net
+    host: smtp.gmail.com
     port: 587
+    username: hardik.khurana@octalsoftware.com
+    password: sjnh jrrq mzvt fgyl
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
-    protocol: smtp
-    test-connection: false
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
-
-
-  datasource:
-    url: jdbc:mysql://localhost:3306/quickbook-sync-service
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    initialize: true
-
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://192.168.1.66:8761/eureka/
-  fetch-registry: true
-  instance:
-    prefer-ip-address: true
-    instance-id: ${EUREKA_INSTANCE_IP}:${spring.application.name}:${server.port}
-    ip-address: ${EUREKA_INSTANCE_IP:${spring.cloud.client.ip-address}}
-
-S3base:
-  url: https://s3-sbucket1.s3.ap-south-1.amazonaws.com/
-external.sms.service.url: https://platform.clickatell.com/messages
+sender.name: FSM Support

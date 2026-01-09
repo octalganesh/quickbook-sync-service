@@ -1,0 +1,82 @@
+server:
+  port: 8089
+  error:
+    include-stacktrace: never
+
+spring:
+
+  application:
+    name: quickbooks-sync-service
+
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASS}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    initialize: true
+
+
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+  fetch-registry: true
+  instance:
+    prefer-ip-address: true
+#    instance-id: ${EUREKA_INSTANCE_IP}:${spring.application.name}:${server.port}
+#    ip-address: ${EUREKA_INSTANCE_IP:${spring.cloud.client.ip-address}}
+
+
+#JWT token, token validity in seconds
+jwt:
+  access:
+    token:
+      validity: 7776000
+  refresh:
+    token:
+      validity: 7776000
+  secret: fsm
+
+
+forgot.password.time.in.second: 60
+forgot.password.otp.resend.count: 3
+user.activation.link.url: http://12.com:7070/?token=<token>
+user.forget.password.link: https://development.d29j2ejh3wc4ru.amplifyapp.com/change-password?token=<token>&type=<type>
+login.front-office.url: https://development.d1z6xgwxg0a207.amplifyapp.com/login
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 10000     # 10 seconds
+        readTimeout: 30000        # 30 seconds
+
+S3Upload:
+  access-key: 123
+  secret-key: 123
+S3base:
+  url: www.fsm.com
+external.sms.service.url: https://fsm.com
+
+randomPassword: Octal@123
+
+springdoc:
+  api-docs.path: /api-docs
+  swagger-ui.path: /swagger-ui.html
+
+aws:
+  access-key: ${AWS_ACCESS_KEY}
+  secret-key: ${AWS_SECRET_KEY}
+  region: ${AWS_S3_REGION}
+  s3-bucket: ${AWS_S3_BUCKET}
+  base-url: ${AWS_S3_BASE_URL}

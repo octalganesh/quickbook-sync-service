@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: quickbooks-sync-service
+  cloud:
+    vault:
+      uri: http://192.168.1.73:8200
+      authentication: TOKEN
+      token: hvs.CAESIMZuNPOKTgfplrWZD2vNO9vr8BzgXRAHUiALjDjgm2XtGh4KHGh2cy5JNVdtS0xrVHlCbWRJV3VEMGdFclBiUzk   # better to export this in env
+      generic:
+        enabled: true
+        backend: hardik/fms
+        default-context: quickbooks-sync-service
+        profile-separator: /
