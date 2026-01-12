@@ -4,9 +4,9 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.octal.supa</groupId>
+    <groupId>com.octal.fsm</groupId>
     <artifactId>quickbook-sync-service</artifactId>
-    <name>quickbook-sync-service</name>
+    <name>quickbooks-sync-service</name>
     <packaging>jar</packaging>
     <version>0.0.1-SNAPSHOT</version>
     <description>Quickbook sync service</description>
@@ -44,7 +44,10 @@
             <version>1.11.694</version>
         </dependency>
 
-
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-vault-config</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
