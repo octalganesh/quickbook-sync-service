@@ -22,4 +22,7 @@ public interface JobServiceClient {
 
     @PostMapping("/jobs/invoice/update-details")
     ResponseEntity<?> updateInvoiceDetails(@RequestBody InvoiceRestDTO.Add add);
+
+    @PostMapping("/jobs/invoice/update-details-list")
+    ResponseEntity<?> updateInvoiceDetailsList(@RequestBody List<InvoiceRestDTO.Add> addList);
 }

@@ -64,6 +64,7 @@ public class CreateInvoiceServiceImpl implements CreateInvoiceService {
                 createInvoiceQueue.get().setCreateInvoiceXmlResponse(xmlPayload);
                 createInvoiceQueue.get().setCreateInvoiceJsonResponse(payloadJson);
                 createInvoiceQueue.get().setActiveToken(null);
+                createInvoiceQueue.get().setIsPaid(false);
                 CreateInvoiceQueue savedInvoiceQueue = createInvoiceQueueRepository.save(createInvoiceQueue.get());
                 if(savedInvoiceQueue.getSyncStatus().equalsIgnoreCase("SUCCESS")){
                     syncInvoiceFromQueueScheduler(savedInvoiceQueue);
@@ -78,7 +79,8 @@ public class CreateInvoiceServiceImpl implements CreateInvoiceService {
             InvoiceRestDTO.Add createQueue = new InvoiceRestDTO.Add();
             createQueue.setInvoiceId(createInvoiceQueue.getInvoiceId());
             createQueue.setRefId(createInvoiceQueue.getRefId());
-            eventPublisher.publishEvent(new InvoiceSyncEvent(createQueue));
+            createQueue.setIsPaid(false);
+            eventPublisher.publishEvent(new InvoiceSyncEvent(createQueue,null));
         }
     }
 
