@@ -33,6 +33,15 @@ public class CreateInvoiceQueue extends AbstractPersistable {
     @Column(name = "amount", nullable = false)
     private String amount;
 
+    @Column(name = "balance_due")
+    private String balanceDue;
+
+    @Column(name = "total_amount_with_tax")
+    private String totalAmountWithTax;
+
+    @Column(name = "is_paid")
+    private Boolean isPaid;
+
     @Lob
     @Column(name = "create_invoice_json_response")
     private String createInvoiceJsonResponse;

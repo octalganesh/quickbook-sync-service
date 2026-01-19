@@ -47,7 +47,7 @@ public class CreateCustomerQueue extends AbstractPersistable {
     @Column(name = "customer_id", nullable = false, unique = true)
     private String customerId; // customer table record Id from admin service
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email")
     private String email;
 
     @Column(name = "secondary_email")

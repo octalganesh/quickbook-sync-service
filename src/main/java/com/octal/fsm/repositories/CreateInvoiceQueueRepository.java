@@ -29,4 +29,6 @@ public interface CreateInvoiceQueueRepository extends JpaRepository<CreateInvoic
     Optional<CreateInvoiceQueue> findByUuid(String uuid);
 
     Optional<CreateInvoiceQueue> findByRefId(String refId);
+
+    List<CreateInvoiceQueue> findByRefIdIn(List<String> refId);
 }
