@@ -35,7 +35,7 @@ public class InvoiceRestServiceImpl implements InvoiceRestService {
         entity.setStatusCode(dto.getStatusCode());
         entity.setStatusSeverity(dto.getStatusSeverity());
         entity.setStatusMessage(dto.getStatusMessage());
-        entity.setActiveToken(dto.getActiveToken());
+        entity.setActiveToken(entity.getUuid());
         CreateInvoiceQueue saved = createInvoiceQueueRepository.save(entity);
         return saved.getUuid();
     }

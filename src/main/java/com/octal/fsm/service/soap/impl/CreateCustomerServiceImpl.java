@@ -97,7 +97,7 @@ public class CreateCustomerServiceImpl implements CreateCustomerService {
     @Override
     public String syncCustomerFromQueue() {
         CreateCustomerQueue createCustomerQueue = createCustomerQueueRepository
-                .findActiveTokenRecord(PageRequest.of(0, 1))
+                .findNextQueued(PageRequest.of(0, 1))
                 .stream()
                 .findFirst()
                 .orElse(null);
@@ -194,7 +194,7 @@ public class CreateCustomerServiceImpl implements CreateCustomerService {
     @Override
     public String getSyncAuthToken() {
         createCustomerQueueRepository.resetAllActiveTokens();
-        CreateCustomerQueue createCustomerQueue = createCustomerQueueRepository.findOneQuery(PageRequest.of(0, 1, Sort.by("createdAt").descending()))
+        CreateCustomerQueue createCustomerQueue = createCustomerQueueRepository.findNextQueued(PageRequest.of(0, 1))
                 .stream()
                 .findFirst()
                 .orElse(null);
