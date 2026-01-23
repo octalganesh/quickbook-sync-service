@@ -20,6 +20,11 @@ public class InvoiceRestDTO {
         private String statusMessage;
         private String activeToken;
         private String invoiceId;
+        private String balanceDue;
+        private String totalAmountWithTax;
+        private Boolean isPaid;
+        private String txnId;
+        private String paymentType;// Cash / Card / Check
     }
 
     @Data

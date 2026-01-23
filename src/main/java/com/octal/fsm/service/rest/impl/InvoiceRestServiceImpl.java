@@ -17,8 +17,10 @@ public class InvoiceRestServiceImpl implements InvoiceRestService {
 
     @Override
     public String createInvoiceQueue(InvoiceRestDTO.Add dto) throws CodeException {
-        if (createInvoiceQueueRepository.findByRefId(dto.getRefId()).isPresent()) {
-            throw new CodeException("Invoice is already queued.", ErrorCode.COMMON);
+        if(dto.getRefId()!=null && !dto.getRefId().isEmpty()) {
+            if (createInvoiceQueueRepository.findByRefId(dto.getRefId()).isPresent()) {
+                throw new CodeException("Invoice is already queued.", ErrorCode.COMMON);
+            }
         }
         CreateInvoiceQueue entity = new CreateInvoiceQueue();
         entity.setRefId(dto.getRefId());
@@ -33,7 +35,7 @@ public class InvoiceRestServiceImpl implements InvoiceRestService {
         entity.setStatusCode(dto.getStatusCode());
         entity.setStatusSeverity(dto.getStatusSeverity());
         entity.setStatusMessage(dto.getStatusMessage());
-        entity.setActiveToken(dto.getActiveToken());
+        entity.setActiveToken(entity.getUuid());
         CreateInvoiceQueue saved = createInvoiceQueueRepository.save(entity);
         return saved.getUuid();
     }

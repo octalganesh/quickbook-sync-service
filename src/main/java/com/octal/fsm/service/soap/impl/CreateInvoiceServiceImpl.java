@@ -7,8 +7,10 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.gson.Gson;
 import com.octal.fsm.dto.rest.InvoiceRestDTO;
 import com.octal.fsm.dto.soap.CreateInvoiceResponse;
+import com.octal.fsm.entities.CreateCustomerQueue;
 import com.octal.fsm.entities.CreateInvoiceQueue;
 import com.octal.fsm.event.InvoiceSyncEvent;
+import com.octal.fsm.repositories.CreateCustomerQueueRepository;
 import com.octal.fsm.repositories.CreateInvoiceQueueRepository;
 import com.octal.fsm.service.soap.CreateInvoiceService;
 import com.octal.fsm.utils.TextUtils;
@@ -26,6 +28,8 @@ public class CreateInvoiceServiceImpl implements CreateInvoiceService {
 
     @Autowired
     private CreateInvoiceQueueRepository createInvoiceQueueRepository;
+    @Autowired
+    private CreateCustomerQueueRepository createCustomerQueueRepository;
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
@@ -64,6 +68,7 @@ public class CreateInvoiceServiceImpl implements CreateInvoiceService {
                 createInvoiceQueue.get().setCreateInvoiceXmlResponse(xmlPayload);
                 createInvoiceQueue.get().setCreateInvoiceJsonResponse(payloadJson);
                 createInvoiceQueue.get().setActiveToken(null);
+                createInvoiceQueue.get().setIsPaid(false);
                 CreateInvoiceQueue savedInvoiceQueue = createInvoiceQueueRepository.save(createInvoiceQueue.get());
                 if(savedInvoiceQueue.getSyncStatus().equalsIgnoreCase("SUCCESS")){
                     syncInvoiceFromQueueScheduler(savedInvoiceQueue);
@@ -78,68 +83,81 @@ public class CreateInvoiceServiceImpl implements CreateInvoiceService {
             InvoiceRestDTO.Add createQueue = new InvoiceRestDTO.Add();
             createQueue.setInvoiceId(createInvoiceQueue.getInvoiceId());
             createQueue.setRefId(createInvoiceQueue.getRefId());
-            eventPublisher.publishEvent(new InvoiceSyncEvent(createQueue));
+            createQueue.setIsPaid(false);
+            eventPublisher.publishEvent(new InvoiceSyncEvent(createQueue,null));
         }
     }
 
     @Override
     public String syncInvoiceFromQueue() {
         CreateInvoiceQueue createInvoiceQueue = createInvoiceQueueRepository
-                .findActiveTokenRecord(PageRequest.of(0, 1))
+                .findNextQueued(PageRequest.of(0, 1))
                 .stream()
                 .findFirst()
                 .orElse(null);
-        if (createInvoiceQueue != null) {
-            String request = "<?xml version=\"1.0\"?>" +
-                    "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                    "  <soap:Body>" +
-                    "    <sendRequestXMLResponse xmlns=\"http://developer.intuit.com/\">" +
-                    "      <sendRequestXMLResult><![CDATA[" +
-                    "        <?qbxml version=\"13.0\"?>" +
-                    "        <QBXML>" +
-                    "          <QBXMLMsgsRq onError=\"stopOnError\">" +
-                    "            <InvoiceAddRq>" +
-                    "               <InvoiceAdd>" +
-                    "                   <CustomerRef>" +
-                    "                       <ListID>" + createInvoiceQueue.getCustomerListId() + "</ListID>" +
-                    "                       <FullName>" + createInvoiceQueue.getCustomerFullName() + "</FullName>" +
-                    "                   </CustomerRef>" +
-                    "                   <InvoiceLineAdd>" +
-                    "                       <ItemRef>" +
-                    "                           <FullName>UpFront</FullName>" +
-                    "                       </ItemRef>" +
-                    "                       <Quantity>1</Quantity>" +
-                    "                       <Rate>" + createInvoiceQueue.getAmount() + "</Rate>" +
-                    "                   </InvoiceLineAdd>" +
-                    "               </InvoiceAdd>" +
-                    "            </InvoiceAddRq>" +
-                    "          </QBXMLMsgsRq>" +
-                    "        </QBXML>" +
-                    "      ]]></sendRequestXMLResult>" +
-                    "    </sendRequestXMLResponse>" +
-                    "  </soap:Body>" +
-                    "</soap:Envelope>";
-            System.out.println(request);
+        if (createInvoiceQueue == null) {
+            return emptySoapResponse();
+        }
+
+        Optional<CreateCustomerQueue> customerOpt = createCustomerQueueRepository.findByQuickBookCustomerIdOrUuid(createInvoiceQueue.getCustomerListId());
+        if (customerOpt.isEmpty()) {
             createInvoiceQueue.setActiveToken(null);
             createInvoiceQueueRepository.save(createInvoiceQueue);
-            return request;
-        } else {
-            return "<?xml version=\"1.0\"?>" +
-                    "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                    "  <soap:Body>" +
-                    "    <sendRequestXMLResponse xmlns=\"http://developer.intuit.com/\">" +
-                    "      <sendRequestXMLResult>" +
-                    "      </sendRequestXMLResult>" +
-                    "    </sendRequestXMLResponse>" +
-                    "  </soap:Body>" +
-                    "</soap:Envelope>";
+            return emptySoapResponse();
         }
+        CreateCustomerQueue customer = customerOpt.get();
+        String request = "<?xml version=\"1.0\"?>" +
+                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+                "  <soap:Body>" +
+                "    <sendRequestXMLResponse xmlns=\"http://developer.intuit.com/\">" +
+                "      <sendRequestXMLResult><![CDATA[" +
+                "        <?qbxml version=\"13.0\"?>" +
+                "        <QBXML>" +
+                "          <QBXMLMsgsRq onError=\"stopOnError\">" +
+                "            <InvoiceAddRq>" +
+                "               <InvoiceAdd>" +
+                "                   <CustomerRef>" +
+                "                       <ListID>" + customer.getQuickBookCustomerId() + "</ListID>" +
+                "                       <FullName>" + createInvoiceQueue.getCustomerFullName() + "</FullName>" +
+                "                   </CustomerRef>" +
+                "                   <InvoiceLineAdd>" +
+                "                       <ItemRef>" +
+                "                           <FullName>UpFront</FullName>" +
+                "                       </ItemRef>" +
+                "                       <Quantity>1</Quantity>" +
+                "                       <Rate>" + createInvoiceQueue.getAmount() + "</Rate>" +
+                "                   </InvoiceLineAdd>" +
+                "               </InvoiceAdd>" +
+                "            </InvoiceAddRq>" +
+                "          </QBXMLMsgsRq>" +
+                "        </QBXML>" +
+                "      ]]></sendRequestXMLResult>" +
+                "    </sendRequestXMLResponse>" +
+                "  </soap:Body>" +
+                "</soap:Envelope>";
+        System.out.println(customer.getQuickBookCustomerId());
+        createInvoiceQueue.setActiveToken(null);
+        createInvoiceQueueRepository.save(createInvoiceQueue);
+        return request;
     }
+
+    private String emptySoapResponse() {
+        return "<?xml version=\"1.0\"?>" +
+                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+                "  <soap:Body>" +
+                "    <sendRequestXMLResponse xmlns=\"http://developer.intuit.com/\">" +
+                "      <sendRequestXMLResult>" +
+                "      </sendRequestXMLResult>" +
+                "    </sendRequestXMLResponse>" +
+                "  </soap:Body>" +
+                "</soap:Envelope>";
+    }
+
 
     @Override
     public String getSyncAuthToken() {
         createInvoiceQueueRepository.resetAllActiveTokens();
-        CreateInvoiceQueue createInvoiceQueue = createInvoiceQueueRepository.findOneQuery(PageRequest.of(0, 1, Sort.by("createdAt").descending()))
+        CreateInvoiceQueue createInvoiceQueue = createInvoiceQueueRepository.findNextQueued(PageRequest.of(0, 1))
                 .stream()
                 .findFirst()
                 .orElse(null);

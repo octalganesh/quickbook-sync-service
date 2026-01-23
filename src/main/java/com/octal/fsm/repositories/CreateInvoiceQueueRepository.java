@@ -21,6 +21,9 @@ public interface CreateInvoiceQueueRepository extends JpaRepository<CreateInvoic
     @Query("SELECT c FROM CreateInvoiceQueue c WHERE c.activeToken IS NOT NULL")
     List<CreateInvoiceQueue> findActiveTokenRecord(Pageable pageable);
 
+    @Query("SELECT c FROM CreateInvoiceQueue c WHERE c.syncStatus = 'QUEUE' ORDER BY c.createdAt ASC")
+    List<CreateInvoiceQueue> findNextQueued(Pageable pageable);
+
     @Modifying
     @Transactional
     @Query("UPDATE CreateInvoiceQueue c SET c.activeToken = null")
@@ -29,4 +32,6 @@ public interface CreateInvoiceQueueRepository extends JpaRepository<CreateInvoic
     Optional<CreateInvoiceQueue> findByUuid(String uuid);
 
     Optional<CreateInvoiceQueue> findByRefId(String refId);
+
+    List<CreateInvoiceQueue> findByRefIdIn(List<String> refId);
 }

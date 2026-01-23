@@ -1,0 +1,16 @@
+<QBWCXML>
+  <AppName>Sync invoice local test1</AppName>
+  <AppID>CUSTOMERS</AppID>
+  <AppURL>http://localhost:8765/api/quickbook-sync-service/sync/invoice/list</AppURL>
+  <AppDescription>Sync QuickBooks Desktop to Sync Invoice</AppDescription>
+  <AppSupport>http://localhost:8765/api/quickbook-sync-service/support</AppSupport>
+  <UserName>qbwc_user</UserName>
+  <OwnerID>{185a64b4-317b-4647-89db-9ef3c5cd7b37}</OwnerID>
+  <FileID>{5514de6b-f1be-47e7-acb0-670f55b11cae}</FileID>
+  <QBType>QBFS</QBType>
+  <Scheduler>
+    <!-- Run every 2 minutes -->
+    <RunEveryNMinutes>2</RunEveryNMinutes>
+  </Scheduler>
+  <IsReadOnly>false</IsReadOnly>
+</QBWCXML>
