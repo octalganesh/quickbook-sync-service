@@ -13,6 +13,7 @@ public class InvoiceDTO {
     @Data
     public static class QBXMLMsgsRs {
         private InvoiceQueryRs InvoiceQueryRs;
+        private ReceivePaymentQueryRs ReceivePaymentQueryRs;
     }
 
     @Data
@@ -30,6 +31,34 @@ public class InvoiceDTO {
         private QBValue<BigDecimal> SalesTaxTotal;//tax on subTotal amount
         private QBValue<BigDecimal> SalesTaxPercentage;//tas percentage
         private QBValue<Boolean> IsPaid;//all amount paid
+    }
+
+    @Data
+    public static class ReceivePaymentQueryRs {
+        private List<ReceivePaymentRet> ReceivePaymentRet;
+    }
+
+    @Data
+    public static class ReceivePaymentRet {
+        private QBValue<String> TxnID;
+        private PaymentMethodRef PaymentMethodRef;
+        private List<AppliedToTxnRet> AppliedToTxnRet;
+    }
+
+    @Data
+    public static class PaymentMethodRef {
+        private QBValue<String> FullName; // Cash / Card / Check
+    }
+
+    @Data
+    public static class AppliedToTxnRet {
+        private QBValue<String> TxnID; // Invoice TxnID
+    }
+
+    @Data
+    public static class LinkedTxn {
+        private QBValue<String> TxnID;
+        private QBValue<String> TxnType; // ReceivePayment
     }
 
     @Data

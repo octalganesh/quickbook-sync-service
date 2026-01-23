@@ -118,6 +118,12 @@ public class QuickBookSyncInvoiceController {
                 "<QBXMLMsgsRq onError=\"stopOnError\">" +
                 "<InvoiceQueryRq requestID=\"1\">" +
                 "</InvoiceQueryRq>" +
+
+                // 2️⃣ Receive payment query (THIS gives PaymentMethodRef)
+                "<ReceivePaymentQueryRq requestID=\"2\">" +
+                "<IncludeLineItems>true</IncludeLineItems>" +
+                "</ReceivePaymentQueryRq>" +
+
                 "</QBXMLMsgsRq>" +
                 "</QBXML>" +
 
