@@ -125,6 +125,7 @@ public class InventoryPartDTO {
         public SalesOrPurchase.AccountRef AccountRef;
         public TaxRate TaxRate;
         public SalesOrPurchase.AccountRef TaxVendorRef;
+        private String itemType;
     }
 
     @Data

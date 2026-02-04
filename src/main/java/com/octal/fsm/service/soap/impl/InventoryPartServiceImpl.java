@@ -4,6 +4,7 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.octal.fsm.clients.JobServiceClient;
+import com.octal.fsm.dto.enums.QbdItemType;
 import com.octal.fsm.dto.rest.InventoryRequestDTO;
 import com.octal.fsm.dto.soap.InventoryPartDTO;
 import com.octal.fsm.entities.InventoryPart;
@@ -49,13 +50,13 @@ public class InventoryPartServiceImpl implements InventoryPartService {
                     .create();
             InventoryPartDTO itemInventoryPartDTO = gson.fromJson(payloadJson, InventoryPartDTO.class);
             List<InventoryPart> listOfInventoryParts = new ArrayList<>();
-            processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemDiscountQueryRs().getItemDiscountRet(), listOfInventoryParts);
-            processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemInventoryAssemblyQueryRs().getItemInventoryAssemblyRet(), listOfInventoryParts);
-            processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemInventoryQueryRs().getItemInventoryRet(), listOfInventoryParts);
-            processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemNonInventoryQueryRs().getItemNonInventoryRet(), listOfInventoryParts);
-            processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemOtherChargeQueryRs().getItemOtherChargeRet(), listOfInventoryParts);
-            processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemSalesTaxQueryRs().getItemSalesTaxRet(), listOfInventoryParts);
-            processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemServiceQueryRs().getItemServiceRet(), listOfInventoryParts);
+            processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemDiscountQueryRs().getItemDiscountRet(), listOfInventoryParts,QbdItemType.DISCOUNT);
+            processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemInventoryAssemblyQueryRs().getItemInventoryAssemblyRet(), listOfInventoryParts,QbdItemType.INVENTORY_ASSEMBLY);
+            processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemInventoryQueryRs().getItemInventoryRet(), listOfInventoryParts,QbdItemType.INVENTORY_PART);
+            processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemNonInventoryQueryRs().getItemNonInventoryRet(), listOfInventoryParts,QbdItemType.NON_INVENTORY_PART);
+            processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemOtherChargeQueryRs().getItemOtherChargeRet(), listOfInventoryParts,QbdItemType.OTHER_CHARGE);
+            processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemSalesTaxQueryRs().getItemSalesTaxRet(), listOfInventoryParts,QbdItemType.SALES_TAX_ITEM);
+            processItems(itemInventoryPartDTO.getQBXMLMsgsRs().getItemServiceQueryRs().getItemServiceRet(), listOfInventoryParts,QbdItemType.SERVICE);
             List<InventoryPart> inventoryParts = inventoryPartRepository.saveAll(listOfInventoryParts);
             try {
                 List<InventoryRequestDTO.Add> responseList = inventoryParts.stream()
@@ -132,7 +133,7 @@ public class InventoryPartServiceImpl implements InventoryPartService {
         }
     }
 
-    public void processItems(List<InventoryPartDTO.ItemInventoryRet> ItemInventoryRet, List<InventoryPart> listOfInventoryParts) {
+    public void processItems(List<InventoryPartDTO.ItemInventoryRet> ItemInventoryRet, List<InventoryPart> listOfInventoryParts, QbdItemType itemType) {
         for (InventoryPartDTO.ItemInventoryRet item : ItemInventoryRet) {
             try {
                 InventoryPart inventoryPart;
@@ -180,7 +181,7 @@ public class InventoryPartServiceImpl implements InventoryPartService {
                 inventoryPart.setAverageCost(item.getAverageCost() != null ? item.getAverageCost().getValue() : null);
                 inventoryPart.setQuantityOnOrder(item.getQuantityOnOrder() != null ? item.getQuantityOnOrder().getValue() : null);
                 inventoryPart.setQuantityOnSalesOrder(item.getQuantityOnSalesOrder() != null ? item.getQuantityOnSalesOrder().getValue() : null);
-                inventoryPart.setItemType("Service");
+                inventoryPart.setItemType(itemType);
                 inventoryPart.setUpdatedAt(LocalDateTime.now());
                 listOfInventoryParts.add(inventoryPart);
             } catch (Exception e) {
