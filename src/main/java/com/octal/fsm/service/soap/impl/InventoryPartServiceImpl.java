@@ -7,6 +7,7 @@ import com.octal.fsm.clients.JobServiceClient;
 import com.octal.fsm.dto.enums.QbdItemType;
 import com.octal.fsm.dto.rest.InventoryRequestDTO;
 import com.octal.fsm.dto.soap.InventoryPartDTO;
+import com.octal.fsm.entities.InventoryItems;
 import com.octal.fsm.entities.InventoryPart;
 import com.octal.fsm.event.InventorySyncEvent;
 import com.octal.fsm.exceptions.CodeException;
@@ -183,6 +184,21 @@ public class InventoryPartServiceImpl implements InventoryPartService {
                 inventoryPart.setQuantityOnSalesOrder(item.getQuantityOnSalesOrder() != null ? item.getQuantityOnSalesOrder().getValue() : null);
                 inventoryPart.setItemType(itemType);
                 inventoryPart.setUpdatedAt(LocalDateTime.now());
+                if(itemType.equals(QbdItemType.INVENTORY_ASSEMBLY)){
+                    if (item.getItemInventoryAssemblyLine() != null && !item.getItemInventoryAssemblyLine().isEmpty()) {
+                        inventoryPart.getInventoryItems().clear();
+                        for (InventoryPartDTO.ItemInventoryAssemblyLine line : item.getItemInventoryAssemblyLine()) {
+                            InventoryItems inventoryItems = new InventoryItems();
+                            if (line.getItemInventoryRef() != null) {
+                                inventoryItems.setListId(line.getItemInventoryRef().getListID() != null ? line.getItemInventoryRef().getListID().getValue() : null);
+                                inventoryItems.setFullName(line.getItemInventoryRef().getFullName() != null ? line.getItemInventoryRef().getFullName().getValue() : null);
+                            }
+                            inventoryItems.setQuantity(line.getQuantity() != null ? line.getQuantity().getValue() : null);
+                            inventoryItems.setInventoryPart(inventoryPart);
+                            inventoryPart.getInventoryItems().add(inventoryItems);
+                        }
+                    }
+                }
                 listOfInventoryParts.add(inventoryPart);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -248,6 +264,18 @@ public class InventoryPartServiceImpl implements InventoryPartService {
         dto.setTaxVendorFullName(part.getTaxVendorFullName());
         dto.setSalePrice(part.getSalePrice());
         dto.setItemType(part.getItemType());
+        if (QbdItemType.INVENTORY_ASSEMBLY.equals(part.getItemType()) && part.getInventoryItems() != null && !part.getInventoryItems().isEmpty()) {
+            dto.getInventoryItems().clear();
+            List<InventoryRequestDTO.InventoryItems> items = new ArrayList<>();
+            for (InventoryItems inventoryItems : part.getInventoryItems()) {
+                InventoryRequestDTO.InventoryItems itemDto = new InventoryRequestDTO.InventoryItems();
+                itemDto.setListId(inventoryItems.getListId());
+                itemDto.setFullName(inventoryItems.getFullName());
+                itemDto.setQuantity(inventoryItems.getQuantity());
+                items.add(itemDto);
+            }
+            dto.setInventoryItems(items);
+        }
         return dto;
     }
 }

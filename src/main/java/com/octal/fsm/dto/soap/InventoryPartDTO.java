@@ -1,5 +1,7 @@
 package com.octal.fsm.dto.soap;
 
+import com.google.gson.annotations.JsonAdapter;
+import com.octal.fsm.service.ObjectOrArrayAdapter;
 import lombok.Data;
 
 import java.util.Date;
@@ -28,11 +30,13 @@ public class InventoryPartDTO {
 
     @Data
     public static class ItemDiscountQueryRs {
+        @JsonAdapter(ObjectOrArrayAdapter.class)
         public List<ItemInventoryRet> ItemDiscountRet;
     }
 
     @Data
     public static class ItemInventoryAssemblyQueryRs{
+        @JsonAdapter(ObjectOrArrayAdapter.class)
         public List<ItemInventoryRet> ItemInventoryAssemblyRet;
     }
 
@@ -83,6 +87,11 @@ public class InventoryPartDTO {
     }
 
     @Data
+    public static class Quantity {
+        public String value;
+    }
+
+    @Data
     public static class IncomeAccountRef {
         public ListID ListID;
         public FullName FullName;
@@ -126,6 +135,20 @@ public class InventoryPartDTO {
         public TaxRate TaxRate;
         public SalesOrPurchase.AccountRef TaxVendorRef;
         private String itemType;
+        @JsonAdapter(ObjectOrArrayAdapter.class)
+        private List<ItemInventoryAssemblyLine> ItemInventoryAssemblyLine;
+    }
+
+    @Data
+    public static class ItemInventoryAssemblyLine{
+        private ItemInventoryRef ItemInventoryRef;
+        public Quantity Quantity;
+    }
+
+    @Data
+    public static class ItemInventoryRef{
+        public ListID  ListID;
+        public FullName FullName;
     }
 
     @Data

@@ -1,7 +1,14 @@
 package com.octal.fsm.dto.rest;
 
 import com.octal.fsm.dto.enums.QbdItemType;
+import com.octal.fsm.entities.AbstractPersistable;
+import com.octal.fsm.entities.InventoryPart;
 import lombok.Data;
+
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 public class InventoryRequestDTO {
@@ -47,6 +54,14 @@ public class InventoryRequestDTO {
         private String taxVendorFullName;
         private String salePrice;
         private QbdItemType itemType;
+        private List<InventoryItems> inventoryItems = new ArrayList<>();
+    }
+
+    @Data
+    public static class  InventoryItems {
+        public String listId;
+        public String fullName;
+        public String quantity;
     }
 
 }
