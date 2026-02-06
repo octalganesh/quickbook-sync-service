@@ -2,6 +2,8 @@ package com.octal.fsm.controller.soap;
 
 import com.octal.fsm.dto.ApiResponse;
 import com.octal.fsm.service.soap.InventoryPartService;
+import com.octal.fsm.utils.SOAPUtil;
+import com.octal.fsm.utils.XmlUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -48,25 +50,25 @@ public class QbSoapController {
                 }
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(receiveResponseXMLResponse());
+                        .body(SOAPUtil.receiveResponseXMLResponse());
             } else if (xmlPayload.contains("<getLastError")) {
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(getLastErrorResponse());
+                        .body(SOAPUtil.getLastErrorResponse());
 
             } else if (xmlPayload.contains("<closeConnection")) {
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(closeConnectionResponse());
+                        .body(SOAPUtil.closeConnectionResponse());
             }
             return ResponseEntity.ok()
                     .contentType(MediaType.TEXT_XML)
-                    .body(errorUnknownMethod());
+                    .body(SOAPUtil.errorUnknownMethod());
 
         } catch (Exception e) {
             return ResponseEntity.ok()
                     .contentType(MediaType.TEXT_XML)
-                    .body(errorSOAP(e.getMessage()));
+                    .body(SOAPUtil.errorSOAP(e.getMessage()));
         }
     }
 
@@ -87,103 +89,20 @@ public class QbSoapController {
 
 
     private String sendRequestXMLResponse() {
-        String request =  "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "  <soap:Body>" +
-                "    <sendRequestXMLResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <sendRequestXMLResult><![CDATA[" +
-                "        <?qbxml version=\"13.0\"?>" +
-                "        <QBXML>" +
-                "          <QBXMLMsgsRq onError=\"stopOnError\">" +
-                "            <ItemServiceQueryRq>" +
-                "              <ActiveStatus>All</ActiveStatus>" +
-                "            </ItemServiceQueryRq>" +
-                "            <ItemNonInventoryQueryRq>" +
-                "              <ActiveStatus>All</ActiveStatus>" +
-                "            </ItemNonInventoryQueryRq>" +
-                "            <ItemInventoryQueryRq>" +
-                "              <ActiveStatus>All</ActiveStatus>" +
-                "            </ItemInventoryQueryRq>" +
-                "            <ItemOtherChargeQueryRq>" +
-                "              <ActiveStatus>All</ActiveStatus>" +
-                "            </ItemOtherChargeQueryRq>" +
-                "            <ItemDiscountQueryRq>" +
-                "              <ActiveStatus>All</ActiveStatus>" +
-                "            </ItemDiscountQueryRq>" +
-                "            <ItemSalesTaxQueryRq>" +
-                "              <ActiveStatus>All</ActiveStatus>" +
-                "            </ItemSalesTaxQueryRq>" +
-                "            <ItemInventoryAssemblyQueryRq>" +
-                "              <ActiveStatus>All</ActiveStatus>" +
-                "            </ItemInventoryAssemblyQueryRq>" +
-                "          </QBXMLMsgsRq>" +
-                "        </QBXML>" +
-                "      ]]></sendRequestXMLResult>" +
-                "    </sendRequestXMLResponse>" +
-                "  </soap:Body>" +
-                "</soap:Envelope>";
+        String innerQueries = buildItemQueriesRq();
+        String request = SOAPUtil.buildSoapQbxmlEnvelope("13.0", innerQueries);
         System.out.println(request);
         return request;
     }
 
-    // 3️⃣ receiveResponseXML
-    private String receiveResponseXMLResponse() {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "  <soap:Body>" +
-                "    <receiveResponseXMLResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <receiveResponseXMLResult>100</receiveResponseXMLResult>" +
-                "    </receiveResponseXMLResponse>" +
-                "  </soap:Body>" +
-                "</soap:Envelope>";
+    private String buildItemQueriesRq() {
+        return
+                "<ItemServiceQueryRq><ActiveStatus>All</ActiveStatus></ItemServiceQueryRq>" +
+                        "<ItemNonInventoryQueryRq><ActiveStatus>All</ActiveStatus></ItemNonInventoryQueryRq>" +
+                        "<ItemInventoryQueryRq><ActiveStatus>All</ActiveStatus></ItemInventoryQueryRq>" +
+                        "<ItemOtherChargeQueryRq><ActiveStatus>All</ActiveStatus></ItemOtherChargeQueryRq>" +
+                        "<ItemDiscountQueryRq><ActiveStatus>All</ActiveStatus></ItemDiscountQueryRq>" +
+                        "<ItemSalesTaxQueryRq><ActiveStatus>All</ActiveStatus></ItemSalesTaxQueryRq>" +
+                        "<ItemInventoryAssemblyQueryRq><ActiveStatus>All</ActiveStatus></ItemInventoryAssemblyQueryRq>";
     }
-
-    // 4️⃣ getLastError
-    private String getLastErrorResponse() {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "  <soap:Body>" +
-                "    <getLastErrorResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <getLastErrorResult>No error</getLastErrorResult>" +
-                "    </getLastErrorResponse>" +
-                "  </soap:Body>" +
-                "</soap:Envelope>";
-    }
-
-    // 5️⃣ closeConnection
-    private String closeConnectionResponse() {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "  <soap:Body>" +
-                "    <closeConnectionResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <closeConnectionResult>Sync completed successfully.</closeConnectionResult>" +
-                "    </closeConnectionResponse>" +
-                "  </soap:Body>" +
-                "</soap:Envelope>";
-    }
-
-    // Unknown method fallback
-    private String errorUnknownMethod() {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "  <soap:Body>" +
-                "    <getLastErrorResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <getLastErrorResult>Unknown method</getLastErrorResult>" +
-                "    </getLastErrorResponse>" +
-                "  </soap:Body>" +
-                "</soap:Envelope>";
-    }
-
-    // Error wrapper
-    private String errorSOAP(String msg) {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "  <soap:Body>" +
-                "    <getLastErrorResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <getLastErrorResult>ERROR: " + msg + "</getLastErrorResult>" +
-                "    </getLastErrorResponse>" +
-                "  </soap:Body>" +
-                "</soap:Envelope>";
-    }
-
 }

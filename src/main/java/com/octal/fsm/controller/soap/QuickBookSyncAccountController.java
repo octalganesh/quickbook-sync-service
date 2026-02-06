@@ -1,7 +1,8 @@
 package com.octal.fsm.controller.soap;
 
 import com.octal.fsm.dto.ApiResponse;
-import com.octal.fsm.service.soap.CustomerService;
+import com.octal.fsm.service.soap.CreateAccountService;
+import com.octal.fsm.service.soap.InventoryPartService;
 import com.octal.fsm.utils.SOAPUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,30 +11,29 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.UUID;
 
 @RestController
-@RequestMapping("/sync/customer")
-public class QuickBookSyncCustomersController {
+@RequestMapping("/sync")
+public class QuickBookSyncAccountController {
 
     @Autowired
-    private CustomerService customerService;
+    private CreateAccountService createAccountService;
 
-    @GetMapping(value = "/list")
+    @GetMapping(value = "/accounts")
     public ResponseEntity<ApiResponse> items(HttpServletRequest request) {
         try {
-            return new ResponseEntity<>(new ApiResponse("Sync Customer List!", null, "200", HttpStatus.OK), HttpStatus.OK);
+            return new ResponseEntity<>(new ApiResponse("permissions assigned successfully!", null, "200", HttpStatus.OK), HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(new ApiResponse("Sync Customer List!", null, "200", HttpStatus.OK), HttpStatus.OK);
+            return new ResponseEntity<>(new ApiResponse("permissions assigned successfully!", null, "200", HttpStatus.OK), HttpStatus.OK);
         }
     }
 
     @PostMapping(
-            value = "/list",
+            value = "/accounts",
             consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_XML_VALUE},
             produces = {MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_XML_VALUE}
     )
-    public ResponseEntity<String> syncItems(@RequestBody String xmlPayload, HttpServletRequest request) {
+    public ResponseEntity<String> syncAccounts(@RequestBody String xmlPayload, HttpServletRequest request) {
         try {
             if (xmlPayload.contains("<authenticate")) {
                 return ResponseEntity.ok()
@@ -45,7 +45,7 @@ public class QuickBookSyncCustomersController {
                         .body(sendRequestXMLResponse());
             } else if (xmlPayload.contains("<receiveResponseXML")) {
                 try {
-                    customerService.syncCustomersFromQuickBookWebConnector(xmlPayload);
+                    createAccountService.createSyncAccountFromQuickBookWebConnector(xmlPayload);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -75,13 +75,12 @@ public class QuickBookSyncCustomersController {
 
     // 1️⃣ authenticate
     private String authenticateResponse() {
-        String token = "session_sync_customer_" + UUID.randomUUID();
         return "<?xml version=\"1.0\"?>" +
                 "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
                 "  <soap:Body>" +
                 "    <authenticateResponse xmlns=\"http://developer.intuit.com/\">" +
                 "      <authenticateResult>" +
-                "        <string>" + token + "</string>" +
+                "        <string>session_token_123</string>" +
                 "        <string/>" +
                 "      </authenticateResult>" +
                 "    </authenticateResponse>" +
@@ -91,22 +90,25 @@ public class QuickBookSyncCustomersController {
 
 
     private String sendRequestXMLResponse() {
-        String request = "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "  <soap:Body>" +
-                "    <sendRequestXMLResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <sendRequestXMLResult><![CDATA[" +
-                "        <?qbxml version=\"13.0\"?>" +
-                "        <QBXML>" +
-                "          <QBXMLMsgsRq onError=\"stopOnError\">" +
-                "            <CustomerQueryRq>" +
-                "            </CustomerQueryRq>" +
-                "          </QBXMLMsgsRq>" +
-                "        </QBXML>" +
-                "      ]]></sendRequestXMLResult>" +
-                "    </sendRequestXMLResponse>" +
-                "  </soap:Body>" +
-                "</soap:Envelope>";
+        String request =
+                "<?xml version=\"1.0\"?>" +
+                        "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+                        "  <soap:Body>" +
+                        "    <sendRequestXMLResponse xmlns=\"http://developer.intuit.com/\">" +
+                        "      <sendRequestXMLResult><![CDATA[" +
+                        "        <?qbxml version=\"13.0\"?>" +
+                        "        <QBXML>" +
+                        "          <QBXMLMsgsRq onError=\"stopOnError\">" +
+                        "            <AccountQueryRq>" +
+                        "              <ActiveStatus>All</ActiveStatus>" +
+                        "            </AccountQueryRq>" +
+                        "          </QBXMLMsgsRq>" +
+                        "        </QBXML>" +
+                        "      ]]></sendRequestXMLResult>" +
+                        "    </sendRequestXMLResponse>" +
+                        "  </soap:Body>" +
+                        "</soap:Envelope>";
+        System.out.println(request);
         return request;
     }
 

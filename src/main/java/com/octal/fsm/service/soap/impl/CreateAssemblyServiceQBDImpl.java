@@ -4,6 +4,8 @@ import com.octal.fsm.entities.CreateAssemblyComponent;
 import com.octal.fsm.entities.CreateAssemblyQueue;
 import com.octal.fsm.repositories.CreateAssemblyQueueRepository;
 import com.octal.fsm.service.soap.CreateAssemblyServiceQBD;
+import com.octal.fsm.utils.SOAPUtil;
+import com.octal.fsm.utils.XmlUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -49,50 +51,42 @@ public class CreateAssemblyServiceQBDImpl implements CreateAssemblyServiceQBD {
         if (queue == null) {
             return emptySoapResponse();
         }
-
-        String qbxml =
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                        "<soap:Body>" +
-                        "<sendRequestXMLResponse xmlns=\"http://developer.intuit.com/\">" +
-                        "<sendRequestXMLResult><![CDATA[" +
-
-                        "<?qbxml version=\"17.0\"?>" +
-                        "<QBXML>" +
-                        "<QBXMLMsgsRq onError=\"stopOnError\">" +
-                        "<ItemInventoryAssemblyAddRq>" +
-                        "<ItemInventoryAssemblyAdd>" +
-
-                        "<Name>" + escapeXml(queue.getAssemblyName()) + "</Name>" +
-
-                        "<SalesPrice>" + queue.getSalesPrice() + "</SalesPrice>" +
-
-                        "<IncomeAccountRef><FullName>"
-                        + escapeXml(queue.getIncomeAccount()) +
-                        "</FullName></IncomeAccountRef>" +
-
-                        "<COGSAccountRef><FullName>"
-                        + escapeXml(queue.getCogsAccount()) +
-                        "</FullName></COGSAccountRef>" +
-
-                        "<AssetAccountRef><FullName>"
-                        + escapeXml(queue.getAssetAccount()) +
-                        "</FullName></AssetAccountRef>" +
-
-                        buildAssemblyLineMod(queue) +
-
-                        "</ItemInventoryAssemblyAdd>" +
-                        "</ItemInventoryAssemblyAddRq>" +
-                        "</QBXMLMsgsRq>" +
-                        "</QBXML>" +
-
-                        "]]></sendRequestXMLResult>" +
-                        "</sendRequestXMLResponse>" +
-                        "</soap:Body>" +
-                        "</soap:Envelope>";
+        // 🔹 Build inner QBXML only
+        String assemblyAddRq = buildInventoryAssemblyAddRq(queue);
+        // 🔹 Wrap with common SOAP + QBXML envelope
+        String qbxml = SOAPUtil.buildSoapQbxmlEnvelope("17.0", assemblyAddRq);
         queue.setActiveToken(null);
         assemblyQueueRepository.save(queue);
         return qbxml;
     }
+
+    private String buildInventoryAssemblyAddRq(CreateAssemblyQueue queue) {
+
+        return "<ItemInventoryAssemblyAddRq>" +
+                "<ItemInventoryAssemblyAdd>" +
+
+                "<Name>" + escapeXml(queue.getAssemblyName()) + "</Name>" +
+
+                "<SalesPrice>" + queue.getSalesPrice() + "</SalesPrice>" +
+
+                "<IncomeAccountRef><FullName>" +
+                escapeXml(queue.getIncomeAccount()) +
+                "</FullName></IncomeAccountRef>" +
+
+                "<COGSAccountRef><FullName>" +
+                escapeXml(queue.getCogsAccount()) +
+                "</FullName></COGSAccountRef>" +
+
+                "<AssetAccountRef><FullName>" +
+                escapeXml(queue.getAssetAccount()) +
+                "</FullName></AssetAccountRef>" +
+
+                buildAssemblyLineMod(queue) +
+
+                "</ItemInventoryAssemblyAdd>" +
+                "</ItemInventoryAssemblyAddRq>";
+    }
+
 
     @Override
     @Transactional

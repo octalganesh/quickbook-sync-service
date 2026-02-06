@@ -2,6 +2,7 @@ package com.octal.fsm.controller.soap;
 
 import com.octal.fsm.dto.ApiResponse;
 import com.octal.fsm.service.soap.CustomerTypeService;
+import com.octal.fsm.utils.SOAPUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -50,25 +51,25 @@ public class QuickBookSyncCustomerTypeController {
                 }
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(receiveResponseXMLResponse());
+                        .body(SOAPUtil.receiveResponseXMLResponse());
             } else if (xmlPayload.contains("<getLastError")) {
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(getLastErrorResponse());
+                        .body(SOAPUtil.getLastErrorResponse());
 
             } else if (xmlPayload.contains("<closeConnection")) {
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(closeConnectionResponse());
+                        .body(SOAPUtil.closeConnectionResponse());
             }
             return ResponseEntity.ok()
                     .contentType(MediaType.TEXT_XML)
-                    .body(errorUnknownMethod());
+                    .body(SOAPUtil.errorUnknownMethod());
 
         } catch (Exception e) {
             return ResponseEntity.ok()
                     .contentType(MediaType.TEXT_XML)
-                    .body(errorSOAP(e.getMessage()));
+                    .body(SOAPUtil.errorSOAP(e.getMessage()));
         }
     }
 

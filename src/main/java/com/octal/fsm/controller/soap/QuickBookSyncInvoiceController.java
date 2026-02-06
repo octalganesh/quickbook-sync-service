@@ -2,6 +2,7 @@ package com.octal.fsm.controller.soap;
 
 import com.octal.fsm.dto.ApiResponse;
 import com.octal.fsm.service.soap.InvoiceService;
+import com.octal.fsm.utils.SOAPUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -52,21 +53,21 @@ public class QuickBookSyncInvoiceController {
                 if (xmlPayload.contains("InvoiceRet")) {
                     invoiceService.syncInvoicesFromQuickBooks(xmlPayload);
                 }
-                return soapResponse(receiveResponseXMLResponse());
+                return soapResponse(SOAPUtil.receiveResponseXMLResponse());
             }
 
             if (xmlPayload.contains("<getLastError")) {
-                return soapResponse(getLastErrorResponse());
+                return soapResponse(SOAPUtil.getLastErrorResponse());
             }
 
             if (xmlPayload.contains("<closeConnection")) {
-                return soapResponse(closeConnectionResponse());
+                return soapResponse(SOAPUtil.closeConnectionResponse());
             }
 
-            return soapResponse(errorResponse("Unknown request"));
+            return soapResponse(SOAPUtil.errorSOAP("Unknown request"));
 
         } catch (Exception e) {
-            return soapResponse(errorResponse(e.getMessage()));
+            return soapResponse(SOAPUtil.errorSOAP(e.getMessage()));
         }
     }
 
@@ -133,45 +134,5 @@ public class QuickBookSyncInvoiceController {
                 "</soap:Envelope>";
     }
 
-
-    private String receiveResponseXMLResponse() {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "<soap:Body>" +
-                "<receiveResponseXMLResponse xmlns=\"http://developer.intuit.com/\">" +
-                "<receiveResponseXMLResult>100</receiveResponseXMLResult>" +
-                "</receiveResponseXMLResponse>" +
-                "</soap:Body></soap:Envelope>";
-    }
-
-    private String getLastErrorResponse() {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "<soap:Body>" +
-                "<getLastErrorResponse xmlns=\"http://developer.intuit.com/\">" +
-                "<getLastErrorResult>No Error</getLastErrorResult>" +
-                "</getLastErrorResponse>" +
-                "</soap:Body></soap:Envelope>";
-    }
-
-    private String closeConnectionResponse() {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "<soap:Body>" +
-                "<closeConnectionResponse xmlns=\"http://developer.intuit.com/\">" +
-                "<closeConnectionResult>Done</closeConnectionResult>" +
-                "</closeConnectionResponse>" +
-                "</soap:Body></soap:Envelope>";
-    }
-
-    private String errorResponse(String msg) {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "<soap:Body>" +
-                "<getLastErrorResponse xmlns=\"http://developer.intuit.com/\">" +
-                "<getLastErrorResult>" + msg + "</getLastErrorResult>" +
-                "</getLastErrorResponse>" +
-                "</soap:Body></soap:Envelope>";
-    }
 }
 

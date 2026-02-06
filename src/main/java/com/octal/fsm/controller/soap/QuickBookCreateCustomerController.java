@@ -2,6 +2,7 @@ package com.octal.fsm.controller.soap;
 
 import com.octal.fsm.dto.ApiResponse;
 import com.octal.fsm.service.soap.CreateCustomerService;
+import com.octal.fsm.utils.SOAPUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -49,89 +50,29 @@ public class QuickBookCreateCustomerController {
                 }
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(receiveResponseXMLResponse());
+                        .body(SOAPUtil.receiveResponseXMLResponse());
             } else if (xmlPayload.contains("<getLastError")) {
                 System.out.println("==== getLastError() ====");
                 System.out.println(xmlPayload);  // THIS contains the actual QB error
                 System.out.println("================================");
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(getLastErrorResponse());
+                        .body(SOAPUtil.getLastErrorResponse());
 
             } else if (xmlPayload.contains("<closeConnection")) {
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(closeConnectionResponse());
+                        .body(SOAPUtil.closeConnectionResponse());
             }
             return ResponseEntity.ok()
                     .contentType(MediaType.TEXT_XML)
-                    .body(errorUnknownMethod());
+                    .body(SOAPUtil.errorUnknownMethod());
 
         } catch (Exception e) {
             return ResponseEntity.ok()
                     .contentType(MediaType.TEXT_XML)
-                    .body(errorSOAP(e.getMessage()));
+                    .body(SOAPUtil.errorSOAP(e.getMessage()));
         }
-    }
-
-    // 3️⃣ receiveResponseXML
-    private String receiveResponseXMLResponse() {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "  <soap:Body>" +
-                "    <receiveResponseXMLResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <receiveResponseXMLResult>100</receiveResponseXMLResult>" +
-                "    </receiveResponseXMLResponse>" +
-                "  </soap:Body>" +
-                "</soap:Envelope>";
-    }
-
-    // 4️⃣ getLastError
-    private String getLastErrorResponse() {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "  <soap:Body>" +
-                "    <getLastErrorResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <getLastErrorResult>No error</getLastErrorResult>" +
-                "    </getLastErrorResponse>" +
-                "  </soap:Body>" +
-                "</soap:Envelope>";
-    }
-
-    // 5️⃣ closeConnection
-    private String closeConnectionResponse() {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "  <soap:Body>" +
-                "    <closeConnectionResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <closeConnectionResult>Customer Create successfully.</closeConnectionResult>" +
-                "    </closeConnectionResponse>" +
-                "  </soap:Body>" +
-                "</soap:Envelope>";
-    }
-
-    // Unknown method fallback
-    private String errorUnknownMethod() {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "  <soap:Body>" +
-                "    <getLastErrorResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <getLastErrorResult>Unknown method</getLastErrorResult>" +
-                "    </getLastErrorResponse>" +
-                "  </soap:Body>" +
-                "</soap:Envelope>";
-    }
-
-    // Error wrapper
-    private String errorSOAP(String msg) {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "  <soap:Body>" +
-                "    <getLastErrorResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <getLastErrorResult>ERROR: " + msg + "</getLastErrorResult>" +
-                "    </getLastErrorResponse>" +
-                "  </soap:Body>" +
-                "</soap:Envelope>";
     }
 
 }

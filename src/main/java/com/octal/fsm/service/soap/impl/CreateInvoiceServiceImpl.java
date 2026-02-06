@@ -13,7 +13,9 @@ import com.octal.fsm.event.InvoiceSyncEvent;
 import com.octal.fsm.repositories.CreateCustomerQueueRepository;
 import com.octal.fsm.repositories.CreateInvoiceQueueRepository;
 import com.octal.fsm.service.soap.CreateInvoiceService;
+import com.octal.fsm.utils.SOAPUtil;
 import com.octal.fsm.utils.TextUtils;
+import com.octal.fsm.utils.XmlUtil;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -106,40 +108,35 @@ public class CreateInvoiceServiceImpl implements CreateInvoiceService {
             return emptySoapResponse();
         }
         CreateCustomerQueue customer = customerOpt.get();
-        String request = "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "  <soap:Body>" +
-                "    <sendRequestXMLResponse xmlns=\"http://developer.intuit.com/\">" +
-                "      <sendRequestXMLResult><![CDATA[" +
-                "        <?qbxml version=\"13.0\"?>" +
-                "        <QBXML>" +
-                "          <QBXMLMsgsRq onError=\"stopOnError\">" +
-                "            <InvoiceAddRq>" +
-                "               <InvoiceAdd>" +
-                "                   <CustomerRef>" +
-                "                       <ListID>" + customer.getQuickBookCustomerId() + "</ListID>" +
-                "                       <FullName>" + createInvoiceQueue.getCustomerFullName() + "</FullName>" +
-                "                   </CustomerRef>" +
-                "                   <InvoiceLineAdd>" +
-                "                       <ItemRef>" +
-                "                           <FullName>UpFront</FullName>" +
-                "                       </ItemRef>" +
-                "                       <Quantity>1</Quantity>" +
-                "                       <Rate>" + createInvoiceQueue.getAmount() + "</Rate>" +
-                "                   </InvoiceLineAdd>" +
-                "               </InvoiceAdd>" +
-                "            </InvoiceAddRq>" +
-                "          </QBXMLMsgsRq>" +
-                "        </QBXML>" +
-                "      ]]></sendRequestXMLResult>" +
-                "    </sendRequestXMLResponse>" +
-                "  </soap:Body>" +
-                "</soap:Envelope>";
-        System.out.println(customer.getQuickBookCustomerId());
+        // 🔹 Build inner QB request only
+        String invoiceAddRq = buildInvoiceAddRq(createInvoiceQueue, customer);
+        // 🔹 Wrap with common SOAP + QBXML envelope
+        String request = SOAPUtil.buildSoapQbxmlEnvelope("13.0", invoiceAddRq);
         createInvoiceQueue.setActiveToken(null);
         createInvoiceQueueRepository.save(createInvoiceQueue);
         return request;
     }
+
+    private String buildInvoiceAddRq(CreateInvoiceQueue queue, CreateCustomerQueue customer) {
+
+        return "<InvoiceAddRq>" +
+                "<InvoiceAdd>" +
+
+                "<CustomerRef>" +
+                "<ListID>" + customer.getQuickBookCustomerId() + "</ListID>" +
+                "<FullName>" + queue.getCustomerFullName() + "</FullName>" +
+                "</CustomerRef>" +
+
+                "<InvoiceLineAdd>" +
+                "<ItemRef><FullName>UpFront</FullName></ItemRef>" +
+                "<Quantity>1</Quantity>" +
+                "<Rate>" + queue.getAmount() + "</Rate>" +
+                "</InvoiceLineAdd>" +
+
+                "</InvoiceAdd>" +
+                "</InvoiceAddRq>";
+    }
+
 
     private String emptySoapResponse() {
         return "<?xml version=\"1.0\"?>" +

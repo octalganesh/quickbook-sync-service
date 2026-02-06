@@ -2,6 +2,7 @@ package com.octal.fsm.controller.soap;
 
 import com.octal.fsm.service.rest.CreateAssemblyService;
 import com.octal.fsm.service.soap.CreateAssemblyServiceQBD;
+import com.octal.fsm.utils.SOAPUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,82 +40,27 @@ public class QuickBookCreateAssemblyController {
                 createAssemblyServiceQBD.createSyncAssemblyFromQBWC(xmlPayload);
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(receiveResponseXMLResponse());
+                        .body(SOAPUtil.receiveResponseXMLResponse());
 
             } else if (xmlPayload.contains("<getLastError")) {
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(getLastErrorResponse());
+                        .body(SOAPUtil.getLastErrorResponse());
 
             } else if (xmlPayload.contains("<closeConnection")) {
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_XML)
-                        .body(closeConnectionResponse());
+                        .body(SOAPUtil.closeConnectionResponse());
             }
 
             return ResponseEntity.ok()
                     .contentType(MediaType.TEXT_XML)
-                    .body(errorUnknownMethod());
+                    .body(SOAPUtil.errorUnknownMethod());
 
         } catch (Exception e) {
             return ResponseEntity.ok()
                     .contentType(MediaType.TEXT_XML)
-                    .body(errorSOAP(e.getMessage()));
+                    .body(SOAPUtil.errorSOAP(e.getMessage()));
         }
-    }
-
-    private String receiveResponseXMLResponse() {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "<soap:Body>" +
-                "<receiveResponseXMLResponse xmlns=\"http://developer.intuit.com/\">" +
-                "<receiveResponseXMLResult>100</receiveResponseXMLResult>" +
-                "</receiveResponseXMLResponse>" +
-                "</soap:Body>" +
-                "</soap:Envelope>";
-    }
-
-    private String getLastErrorResponse() {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "<soap:Body>" +
-                "<getLastErrorResponse xmlns=\"http://developer.intuit.com/\">" +
-                "<getLastErrorResult>No error</getLastErrorResult>" +
-                "</getLastErrorResponse>" +
-                "</soap:Body>" +
-                "</soap:Envelope>";
-    }
-
-    private String closeConnectionResponse() {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "<soap:Body>" +
-                "<closeConnectionResponse xmlns=\"http://developer.intuit.com/\">" +
-                "<closeConnectionResult>Assembly sync completed.</closeConnectionResult>" +
-                "</closeConnectionResponse>" +
-                "</soap:Body>" +
-                "</soap:Envelope>";
-    }
-
-    private String errorUnknownMethod() {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "<soap:Body>" +
-                "<getLastErrorResponse xmlns=\"http://developer.intuit.com/\">" +
-                "<getLastErrorResult>Unknown method</getLastErrorResult>" +
-                "</getLastErrorResponse>" +
-                "</soap:Body>" +
-                "</soap:Envelope>";
-    }
-
-    private String errorSOAP(String msg) {
-        return "<?xml version=\"1.0\"?>" +
-                "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-                "<soap:Body>" +
-                "<getLastErrorResponse xmlns=\"http://developer.intuit.com/\">" +
-                "<getLastErrorResult>ERROR: " + msg + "</getLastErrorResult>" +
-                "</getLastErrorResponse>" +
-                "</soap:Body>" +
-                "</soap:Envelope>";
     }
 }
